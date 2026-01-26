@@ -1,0 +1,28 @@
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@400;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  @apply bg-poe-bg text-gray-300 font-sans;
+  background-image: radial-gradient(circle at 50% 0%, #1a1a1a 0%, #0a0a0a 100%);
+  margin: 0;
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-poe-bg;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-poe-border rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-poe-golddim;
+}

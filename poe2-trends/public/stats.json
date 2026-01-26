@@ -1,0 +1,2366 @@
+{
+  "Quiver": {
+    "total_items": 1,
+    "stats": [
+      {
+        "name": "Adds # to # Lightning damage to Attacks",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 2.0,
+            "max": 2.0,
+            "avg": 2.0
+          },
+          {
+            "min": 69.0,
+            "max": 69.0,
+            "avg": 69.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Damage with Bow Skills",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 56.0,
+            "max": 56.0,
+            "avg": 56.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Projectile Speed",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 45.0,
+            "max": 45.0,
+            "avg": 45.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Projectile Skills",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 2.0,
+            "max": 2.0,
+            "avg": 2.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Critical Hit Chance for Attacks",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 35.0,
+            "max": 35.0,
+            "avg": 35.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Critical Hit Chance for Attacks",
+        "type": "implicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 27.0,
+            "max": 27.0,
+            "avg": 27.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Speed",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 16.0,
+            "max": 16.0,
+            "avg": 16.0
+          }
+        ]
+      }
+    ]
+  },
+  "Penumbra Ring": {
+    "total_items": 2,
+    "stats": [
+      {
+        "name": "Adds # to # Physical Damage to Attacks",
+        "type": "prefix",
+        "count": 2,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 19.0,
+            "max": 22.0,
+            "avg": 20.5
+          },
+          {
+            "min": 30.0,
+            "max": 34.0,
+            "avg": 32.0
+          }
+        ]
+      },
+      {
+        "name": "Adds # to # Fire damage to Attacks",
+        "type": "prefix",
+        "count": 2,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 33.0,
+            "max": 34.0,
+            "avg": 33.5
+          },
+          {
+            "min": 51.0,
+            "max": 54.0,
+            "avg": 52.5
+          }
+        ]
+      },
+      {
+        "name": "#% to all Elemental Resistances",
+        "type": "prefix",
+        "count": 2,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 16.0,
+            "max": 16.0,
+            "avg": 16.0
+          }
+        ]
+      },
+      {
+        "name": "# Prefix Modifiers allowed",
+        "type": "implicit",
+        "count": 2,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 2.0,
+            "max": 2.0,
+            "avg": 2.0
+          }
+        ]
+      },
+      {
+        "name": "# Suffix Modifiers allowed",
+        "type": "implicit",
+        "count": 2,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 2.0,
+            "max": 2.0,
+            "avg": 2.0
+          }
+        ]
+      },
+      {
+        "name": "Adds # to # Lightning damage to Attacks",
+        "type": "fractured",
+        "count": 2,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 2.0,
+            "max": 4.0,
+            "avg": 3.0
+          },
+          {
+            "min": 81.0,
+            "max": 84.0,
+            "avg": 82.5
+          }
+        ]
+      },
+      {
+        "name": "Adds # to # Cold damage to Attacks",
+        "type": "prefix",
+        "count": 2,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 26.0,
+            "max": 27.0,
+            "avg": 26.5
+          },
+          {
+            "min": 44.0,
+            "max": 44.0,
+            "avg": 44.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Lightning Damage",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 50.0,
+        "values": [
+          {
+            "min": 30.0,
+            "max": 30.0,
+            "avg": 30.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Rarity of Items found",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 50.0,
+        "values": [
+          {
+            "min": 19.0,
+            "max": 19.0,
+            "avg": 19.0
+          }
+        ]
+      }
+    ]
+  },
+  "Bow": {
+    "total_items": 53,
+    "stats": [
+      {
+        "name": "Adds # to # Physical Damage",
+        "type": "prefix",
+        "count": 53,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 27.0,
+            "max": 39.0,
+            "avg": 38.4
+          },
+          {
+            "min": 63.0,
+            "max": 66.0,
+            "avg": 65.1
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Projectile Skills",
+        "type": "suffix",
+        "count": 53,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "#% to Critical Hit Chance",
+        "type": "fractured",
+        "count": 53,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "#% Surpassing chance to fire an additional Arrow",
+        "type": "suffix",
+        "count": 48,
+        "percentage": 90.6,
+        "values": [
+          {
+            "min": 199.0,
+            "max": 200.0,
+            "avg": 199.9
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "prefix",
+        "count": 46,
+        "percentage": 86.8,
+        "values": [
+          {
+            "min": 77.0,
+            "max": 178.0,
+            "avg": 163.8
+          }
+        ]
+      },
+      {
+        "name": "#% reduced Projectile Range",
+        "type": "implicit",
+        "count": 44,
+        "percentage": 83.0,
+        "values": [
+          {
+            "min": 50.0,
+            "max": 50.0,
+            "avg": 50.0
+          }
+        ]
+      },
+      {
+        "name": "# to Accuracy Rating",
+        "type": "suffix",
+        "count": 43,
+        "percentage": 81.1,
+        "values": [
+          {
+            "min": 177.0,
+            "max": 187.0,
+            "avg": 185.8
+          }
+        ]
+      },
+      {
+        "name": "Bow Attacks fire an additional Arrow",
+        "type": "rune",
+        "count": 34,
+        "percentage": 64.2,
+        "values": []
+      },
+      {
+        "name": "Bonded: #% increased Projectile Speed",
+        "type": "bonded",
+        "count": 34,
+        "percentage": 64.2,
+        "values": [
+          {
+            "min": 20.0,
+            "max": 20.0,
+            "avg": 20.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Damage of all Elements",
+        "type": "rune",
+        "count": 33,
+        "percentage": 62.3,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% chance to gain an additional random Charge when you gain a Charge",
+        "type": "bonded",
+        "count": 33,
+        "percentage": 62.3,
+        "values": [
+          {
+            "min": 8.0,
+            "max": 8.0,
+            "avg": 8.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Damage against Rare or Unique Enemies",
+        "type": "rune",
+        "count": 20,
+        "percentage": 37.7,
+        "values": [
+          {
+            "min": 50.0,
+            "max": 50.0,
+            "avg": 50.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: # to Level of all Attack Skills",
+        "type": "bonded",
+        "count": 20,
+        "percentage": 37.7,
+        "values": [
+          {
+            "min": 1.0,
+            "max": 1.0,
+            "avg": 1.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "rune",
+        "count": 11,
+        "percentage": 20.8,
+        "values": [
+          {
+            "min": 18.0,
+            "max": 54.0,
+            "avg": 37.6
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% increased effect of Fully Broken Armour",
+        "type": "bonded",
+        "count": 11,
+        "percentage": 20.8,
+        "values": [
+          {
+            "min": 20.0,
+            "max": 60.0,
+            "avg": 41.8
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Chaos Damage",
+        "type": "rune",
+        "count": 8,
+        "percentage": 15.1,
+        "values": [
+          {
+            "min": 13.0,
+            "max": 13.0,
+            "avg": 13.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: Gain #% of Damage as Extra Physical Damage",
+        "type": "bonded",
+        "count": 8,
+        "percentage": 15.1,
+        "values": [
+          {
+            "min": 8.0,
+            "max": 8.0,
+            "avg": 8.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "suffix",
+        "count": 6,
+        "percentage": 11.3,
+        "values": [
+          {
+            "min": 177.0,
+            "max": 179.0,
+            "avg": 178.7
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "explicit",
+        "count": 6,
+        "percentage": 11.3,
+        "values": [
+          {
+            "min": 254.0,
+            "max": 257.0,
+            "avg": 255.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased bonuses gained from Equipped Quiver",
+        "type": "prefix",
+        "count": 5,
+        "percentage": 9.4,
+        "values": [
+          {
+            "min": 39.0,
+            "max": 40.0,
+            "avg": 39.8
+          }
+        ]
+      },
+      {
+        "name": "# to Accuracy Rating",
+        "type": "prefix",
+        "count": 5,
+        "percentage": 9.4,
+        "values": [
+          {
+            "min": 190.0,
+            "max": 195.0,
+            "avg": 194.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Speed",
+        "type": "suffix",
+        "count": 3,
+        "percentage": 5.7,
+        "values": [
+          {
+            "min": 19.0,
+            "max": 19.0,
+            "avg": 19.0
+          }
+        ]
+      },
+      {
+        "name": "#% Surpassing chance to fire an additional Arrow",
+        "type": "prefix",
+        "count": 2,
+        "percentage": 3.8,
+        "values": [
+          {
+            "min": 200.0,
+            "max": 200.0,
+            "avg": 200.0
+          }
+        ]
+      },
+      {
+        "name": "#% reduced Poison Duration",
+        "type": "rune",
+        "count": 1,
+        "percentage": 1.9,
+        "values": [
+          {
+            "min": 25.0,
+            "max": 25.0,
+            "avg": 25.0
+          }
+        ]
+      },
+      {
+        "name": "Targets can be affected by # of your Poisons at the same time",
+        "type": "rune",
+        "count": 1,
+        "percentage": 1.9,
+        "values": [
+          {
+            "min": 1.0,
+            "max": 1.0,
+            "avg": 1.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: Gain #% of Elemental Damage as Extra Chaos Damage",
+        "type": "bonded",
+        "count": 1,
+        "percentage": 1.9,
+        "values": [
+          {
+            "min": 13.0,
+            "max": 13.0,
+            "avg": 13.0
+          }
+        ]
+      },
+      {
+        "name": "Leeches #% of Physical Damage as Mana",
+        "type": "rune",
+        "count": 1,
+        "percentage": 1.9,
+        "values": [
+          {
+            "min": 2.5,
+            "max": 2.5,
+            "avg": 2.5
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% increased maximum Mana",
+        "type": "bonded",
+        "count": 1,
+        "percentage": 1.9,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      }
+    ]
+  },
+  "Staff": {
+    "total_items": 4,
+    "stats": [
+      {
+        "name": "Gain #% of Damage as Extra Lightning Damage",
+        "type": "prefix",
+        "count": 4,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 58.0,
+            "max": 60.0,
+            "avg": 59.5
+          }
+        ]
+      },
+      {
+        "name": "#% increased Spell Damage",
+        "type": "prefix",
+        "count": 4,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 195.0,
+            "max": 238.0,
+            "avg": 226.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Cast Speed",
+        "type": "suffix",
+        "count": 4,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 44.0,
+            "max": 52.0,
+            "avg": 49.8
+          }
+        ]
+      },
+      {
+        "name": "#% increased Critical Hit Chance for Spells",
+        "type": "suffix",
+        "count": 3,
+        "percentage": 75.0,
+        "values": [
+          {
+            "min": 98.0,
+            "max": 109.0,
+            "avg": 104.3
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Spell Skills",
+        "type": "fractured",
+        "count": 3,
+        "percentage": 75.0,
+        "values": [
+          {
+            "min": 6.0,
+            "max": 6.0,
+            "avg": 6.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Spell Damage",
+        "type": "rune",
+        "count": 3,
+        "percentage": 75.0,
+        "values": [
+          {
+            "min": 30.0,
+            "max": 30.0,
+            "avg": 30.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Damage of all Elements",
+        "type": "rune",
+        "count": 3,
+        "percentage": 75.0,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% chance when collecting an Elemental Infusion to gain an\nadditional Elemental Infusion of the same type",
+        "type": "bonded",
+        "count": 3,
+        "percentage": 75.0,
+        "values": [
+          {
+            "min": 12.0,
+            "max": 12.0,
+            "avg": 12.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: Break Armour on Critical Hit with Spells equal to #% of Physical Damage dealt",
+        "type": "bonded",
+        "count": 3,
+        "percentage": 75.0,
+        "values": [
+          {
+            "min": 12.0,
+            "max": 12.0,
+            "avg": 12.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Fire Damage",
+        "type": "prefix",
+        "count": 2,
+        "percentage": 50.0,
+        "values": [
+          {
+            "min": 60.0,
+            "max": 60.0,
+            "avg": 60.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Spell Skills",
+        "type": "rune",
+        "count": 2,
+        "percentage": 50.0,
+        "values": [
+          {
+            "min": 1.0,
+            "max": 1.0,
+            "avg": 1.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: Archon recovery period expires #% faster",
+        "type": "bonded",
+        "count": 2,
+        "percentage": 50.0,
+        "values": [
+          {
+            "min": 30.0,
+            "max": 30.0,
+            "avg": 30.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Lightning Damage",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 25.0,
+        "values": [
+          {
+            "min": 238.0,
+            "max": 238.0,
+            "avg": 238.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Lightning Spell Skills",
+        "type": "fractured",
+        "count": 1,
+        "percentage": 25.0,
+        "values": [
+          {
+            "min": 7.0,
+            "max": 7.0,
+            "avg": 7.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Cold Damage",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 25.0,
+        "values": [
+          {
+            "min": 58.0,
+            "max": 58.0,
+            "avg": 58.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Critical Spell Damage Bonus",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 25.0,
+        "values": [
+          {
+            "min": 40.0,
+            "max": 40.0,
+            "avg": 40.0
+          }
+        ]
+      }
+    ]
+  },
+  "Tasalian Focus": {
+    "total_items": 1,
+    "stats": [
+      {
+        "name": "# to maximum Energy Shield",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 90.0,
+            "max": 90.0,
+            "avg": 90.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Spell Damage",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 89.0,
+            "max": 89.0,
+            "avg": 89.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Lightning Damage",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 89.0,
+            "max": 89.0,
+            "avg": 89.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Spell Skills",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 2.0,
+            "max": 2.0,
+            "avg": 2.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Critical Hit Chance for Spells",
+        "type": "fractured",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 59.0,
+            "max": 59.0,
+            "avg": 59.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Cast Speed",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 32.0,
+            "max": 32.0,
+            "avg": 32.0
+          }
+        ]
+      }
+    ]
+  },
+  "Crossbow": {
+    "total_items": 3,
+    "stats": [
+      {
+        "name": "# to Accuracy Rating",
+        "type": "prefix",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 187.0,
+            "max": 187.0,
+            "avg": 187.0
+          }
+        ]
+      },
+      {
+        "name": "#% to Critical Hit Chance",
+        "type": "suffix",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 4.99,
+            "max": 4.99,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Projectile Skills",
+        "type": "suffix",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 7.0,
+            "max": 7.0,
+            "avg": 7.0
+          }
+        ]
+      },
+      {
+        "name": "Grenade Skills Fire an additional Projectile",
+        "type": "implicit",
+        "count": 3,
+        "percentage": 100.0,
+        "values": []
+      },
+      {
+        "name": "Adds # to # Physical Damage",
+        "type": "prefix",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 50.0,
+            "max": 51.0,
+            "avg": 50.7
+          },
+          {
+            "min": 92.0,
+            "max": 94.0,
+            "avg": 92.7
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "prefix",
+        "count": 2,
+        "percentage": 66.7,
+        "values": [
+          {
+            "min": 77.0,
+            "max": 77.0,
+            "avg": 77.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Speed",
+        "type": "suffix",
+        "count": 2,
+        "percentage": 66.7,
+        "values": [
+          {
+            "min": 18.0,
+            "max": 18.0,
+            "avg": 18.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "fractured",
+        "count": 2,
+        "percentage": 66.7,
+        "values": [
+          {
+            "min": 178.0,
+            "max": 178.0,
+            "avg": 178.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "rune",
+        "count": 2,
+        "percentage": 66.7,
+        "values": [
+          {
+            "min": 54.0,
+            "max": 54.0,
+            "avg": 54.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% increased effect of Fully Broken Armour",
+        "type": "bonded",
+        "count": 2,
+        "percentage": 66.7,
+        "values": [
+          {
+            "min": 60.0,
+            "max": 60.0,
+            "avg": 60.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "explicit",
+        "count": 1,
+        "percentage": 33.3,
+        "values": [
+          {
+            "min": 255.0,
+            "max": 255.0,
+            "avg": 255.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Speed",
+        "type": "fractured",
+        "count": 1,
+        "percentage": 33.3,
+        "values": [
+          {
+            "min": 19.0,
+            "max": 19.0,
+            "avg": 19.0
+          }
+        ]
+      }
+    ]
+  },
+  "Talisman": {
+    "total_items": 13,
+    "stats": [
+      {
+        "name": "Adds # to # Physical Damage",
+        "type": "prefix",
+        "count": 13,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 43.0,
+            "max": 55.0,
+            "avg": 52.1
+          },
+          {
+            "min": 90.0,
+            "max": 94.0,
+            "avg": 92.8
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "rune",
+        "count": 12,
+        "percentage": 92.3,
+        "values": [
+          {
+            "min": 54.0,
+            "max": 54.0,
+            "avg": 54.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% increased effect of Fully Broken Armour",
+        "type": "bonded",
+        "count": 12,
+        "percentage": 92.3,
+        "values": [
+          {
+            "min": 60.0,
+            "max": 60.0,
+            "avg": 60.0
+          }
+        ]
+      },
+      {
+        "name": "# to Accuracy Rating",
+        "type": "prefix",
+        "count": 12,
+        "percentage": 92.3,
+        "values": [
+          {
+            "min": 175.0,
+            "max": 198.0,
+            "avg": 188.4
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Speed",
+        "type": "suffix",
+        "count": 11,
+        "percentage": 84.6,
+        "values": [
+          {
+            "min": 28.0,
+            "max": 28.0,
+            "avg": 28.0
+          }
+        ]
+      },
+      {
+        "name": "#% to Critical Hit Chance",
+        "type": "fractured",
+        "count": 8,
+        "percentage": 61.5,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "explicit",
+        "count": 7,
+        "percentage": 53.8,
+        "values": [
+          {
+            "min": 253.0,
+            "max": 258.0,
+            "avg": 255.1
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "prefix",
+        "count": 6,
+        "percentage": 46.2,
+        "values": [
+          {
+            "min": 174.0,
+            "max": 178.0,
+            "avg": 176.7
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Melee Skills",
+        "type": "fractured",
+        "count": 5,
+        "percentage": 38.5,
+        "values": [
+          {
+            "min": 7.0,
+            "max": 7.0,
+            "avg": 7.0
+          }
+        ]
+      },
+      {
+        "name": "#% to Critical Hit Chance",
+        "type": "suffix",
+        "count": 5,
+        "percentage": 38.5,
+        "values": [
+          {
+            "min": 4.86,
+            "max": 5.0,
+            "avg": 4.9
+          }
+        ]
+      },
+      {
+        "name": "# to Maximum Rage",
+        "type": "implicit",
+        "count": 4,
+        "percentage": 30.8,
+        "values": [
+          {
+            "min": 12.0,
+            "max": 12.0,
+            "avg": 12.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Melee Skills",
+        "type": "suffix",
+        "count": 4,
+        "percentage": 30.8,
+        "values": [
+          {
+            "min": 7.0,
+            "max": 7.0,
+            "avg": 7.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Attack Skills",
+        "type": "suffix",
+        "count": 3,
+        "percentage": 23.1,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "#% to Critical Damage Bonus",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 25.0,
+            "max": 25.0,
+            "avg": 25.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Physical Damage",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 31.0,
+            "max": 31.0,
+            "avg": 31.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Speed",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 28.0,
+            "max": 28.0,
+            "avg": 28.0
+          }
+        ]
+      },
+      {
+        "name": "#% chance to gain Onslaught on Killing Hits with this Weapon",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 25.0,
+            "max": 25.0,
+            "avg": 25.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Chaos Damage",
+        "type": "rune",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 13.0,
+            "max": 13.0,
+            "avg": 13.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Damage against Rare or Unique Enemies",
+        "type": "rune",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 50.0,
+            "max": 50.0,
+            "avg": 50.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Damage of all Elements",
+        "type": "rune",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: # to Level of all Attack Skills",
+        "type": "bonded",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 1.0,
+            "max": 1.0,
+            "avg": 1.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: Gain #% of Damage as Extra Physical Damage",
+        "type": "bonded",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 8.0,
+            "max": 8.0,
+            "avg": 8.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% chance to gain an additional random Charge when you gain a Charge",
+        "type": "bonded",
+        "count": 1,
+        "percentage": 7.7,
+        "values": [
+          {
+            "min": 8.0,
+            "max": 8.0,
+            "avg": 8.0
+          }
+        ]
+      }
+    ]
+  },
+  "Wand": {
+    "total_items": 15,
+    "stats": [
+      {
+        "name": "# to Level of all Spell Skills",
+        "type": "rune",
+        "count": 14,
+        "percentage": 93.3,
+        "values": [
+          {
+            "min": 1.0,
+            "max": 1.0,
+            "avg": 1.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: Archon recovery period expires #% faster",
+        "type": "bonded",
+        "count": 14,
+        "percentage": 93.3,
+        "values": [
+          {
+            "min": 30.0,
+            "max": 30.0,
+            "avg": 30.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Cold Damage",
+        "type": "prefix",
+        "count": 12,
+        "percentage": 80.0,
+        "values": [
+          {
+            "min": 30.0,
+            "max": 30.0,
+            "avg": 30.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Lightning Damage",
+        "type": "prefix",
+        "count": 12,
+        "percentage": 80.0,
+        "values": [
+          {
+            "min": 30.0,
+            "max": 30.0,
+            "avg": 30.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Critical Hit Chance for Spells",
+        "type": "suffix",
+        "count": 12,
+        "percentage": 80.0,
+        "values": [
+          {
+            "min": 71.0,
+            "max": 73.0,
+            "avg": 72.8
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Spell Skills",
+        "type": "suffix",
+        "count": 11,
+        "percentage": 73.3,
+        "values": [
+          {
+            "min": 4.0,
+            "max": 4.0,
+            "avg": 4.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Cast Speed",
+        "type": "suffix",
+        "count": 11,
+        "percentage": 73.3,
+        "values": [
+          {
+            "min": 35.0,
+            "max": 35.0,
+            "avg": 35.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Spell Damage",
+        "type": "fractured",
+        "count": 11,
+        "percentage": 73.3,
+        "values": [
+          {
+            "min": 119.0,
+            "max": 119.0,
+            "avg": 119.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Damage of all Elements",
+        "type": "rune",
+        "count": 9,
+        "percentage": 60.0,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% chance when collecting an Elemental Infusion to gain an\nadditional Elemental Infusion of the same type",
+        "type": "bonded",
+        "count": 9,
+        "percentage": 60.0,
+        "values": [
+          {
+            "min": 12.0,
+            "max": 12.0,
+            "avg": 12.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Spell Damage",
+        "type": "rune",
+        "count": 5,
+        "percentage": 33.3,
+        "values": [
+          {
+            "min": 30.0,
+            "max": 30.0,
+            "avg": 30.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: Break Armour on Critical Hit with Spells equal to #% of Physical Damage dealt",
+        "type": "bonded",
+        "count": 5,
+        "percentage": 33.3,
+        "values": [
+          {
+            "min": 12.0,
+            "max": 12.0,
+            "avg": 12.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Spell Damage",
+        "type": "prefix",
+        "count": 3,
+        "percentage": 20.0,
+        "values": [
+          {
+            "min": 114.0,
+            "max": 114.0,
+            "avg": 114.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Spell Physical Damage",
+        "type": "prefix",
+        "count": 3,
+        "percentage": 20.0,
+        "values": [
+          {
+            "min": 119.0,
+            "max": 119.0,
+            "avg": 119.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Critical Spell Damage Bonus",
+        "type": "suffix",
+        "count": 3,
+        "percentage": 20.0,
+        "values": [
+          {
+            "min": 33.0,
+            "max": 33.0,
+            "avg": 33.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Physical Spell Skills",
+        "type": "suffix",
+        "count": 3,
+        "percentage": 20.0,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Cast Speed",
+        "type": "fractured",
+        "count": 3,
+        "percentage": 20.0,
+        "values": [
+          {
+            "min": 25.0,
+            "max": 25.0,
+            "avg": 25.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Fire Damage",
+        "type": "prefix",
+        "count": 2,
+        "percentage": 13.3,
+        "values": [
+          {
+            "min": 29.0,
+            "max": 30.0,
+            "avg": 29.5
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Cold Spell Skills",
+        "type": "fractured",
+        "count": 1,
+        "percentage": 6.7,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Cast Speed while on Full Mana",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 6.7,
+        "values": [
+          {
+            "min": 36.0,
+            "max": 36.0,
+            "avg": 36.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Physical Damage",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 6.7,
+        "values": [
+          {
+            "min": 24.0,
+            "max": 24.0,
+            "avg": 24.0
+          }
+        ]
+      },
+      {
+        "name": "# to maximum Mana",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 6.7,
+        "values": [
+          {
+            "min": 37.0,
+            "max": 37.0,
+            "avg": 37.0
+          }
+        ]
+      }
+    ]
+  },
+  "Breach Ring": {
+    "total_items": 1,
+    "stats": [
+      {
+        "name": "Adds # to # Physical Damage to Attacks",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 18.0,
+            "max": 18.0,
+            "avg": 18.0
+          },
+          {
+            "min": 43.0,
+            "max": 43.0,
+            "avg": 43.0
+          }
+        ]
+      },
+      {
+        "name": "#% to Fire Resistance",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 44.0,
+            "max": 44.0,
+            "avg": 44.0
+          }
+        ]
+      },
+      {
+        "name": "#% to Cold Resistance",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 45.0,
+            "max": 45.0,
+            "avg": 45.0
+          }
+        ]
+      },
+      {
+        "name": "#% to Lightning Resistance",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 44.0,
+            "max": 44.0,
+            "avg": 44.0
+          }
+        ]
+      },
+      {
+        "name": "Maximum Quality is #%",
+        "type": "implicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 40.0,
+            "max": 40.0,
+            "avg": 40.0
+          }
+        ]
+      },
+      {
+        "name": "Adds # to # Fire damage to Attacks",
+        "type": "fractured",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 40.0,
+            "max": 40.0,
+            "avg": 40.0
+          },
+          {
+            "min": 53.0,
+            "max": 53.0,
+            "avg": 53.0
+          }
+        ]
+      },
+      {
+        "name": "Adds # to # Lightning damage to Attacks",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 2.0,
+            "max": 2.0,
+            "avg": 2.0
+          },
+          {
+            "min": 96.0,
+            "max": 96.0,
+            "avg": 96.0
+          }
+        ]
+      }
+    ]
+  },
+  "Massive Greathammer": {
+    "total_items": 1,
+    "stats": [
+      {
+        "name": "#% increased Physical Damage",
+        "type": "explicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 258.0,
+            "max": 258.0,
+            "avg": 258.0
+          }
+        ]
+      },
+      {
+        "name": "# to Accuracy Rating",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 191.0,
+            "max": 191.0,
+            "avg": 191.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Melee Skills",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 7.0,
+            "max": 7.0,
+            "avg": 7.0
+          }
+        ]
+      },
+      {
+        "name": "#% chance to gain Onslaught on Killing Hits with this Weapon",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 23.0,
+            "max": 23.0,
+            "avg": 23.0
+          }
+        ]
+      },
+      {
+        "name": "Adds # to # Physical Damage",
+        "type": "fractured",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 54.0,
+            "max": 54.0,
+            "avg": 54.0
+          },
+          {
+            "min": 94.0,
+            "max": 94.0,
+            "avg": 94.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "rune",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 54.0,
+            "max": 54.0,
+            "avg": 54.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% increased effect of Fully Broken Armour",
+        "type": "bonded",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 60.0,
+            "max": 60.0,
+            "avg": 60.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Speed",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 28.0,
+            "max": 28.0,
+            "avg": 28.0
+          }
+        ]
+      }
+    ]
+  },
+  "Akoyan Spear": {
+    "total_items": 3,
+    "stats": [
+      {
+        "name": "#% increased Physical Damage",
+        "type": "prefix",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 177.0,
+            "max": 179.0,
+            "avg": 178.3
+          }
+        ]
+      },
+      {
+        "name": "Adds # to # Physical Damage",
+        "type": "prefix",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 38.0,
+            "max": 39.0,
+            "avg": 38.7
+          },
+          {
+            "min": 66.0,
+            "max": 66.0,
+            "avg": 66.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Speed",
+        "type": "prefix",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 27.0,
+            "max": 28.0,
+            "avg": 27.7
+          }
+        ]
+      },
+      {
+        "name": "#% to Critical Hit Chance",
+        "type": "fractured",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "rune",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 18.0,
+            "max": 36.0,
+            "avg": 30.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% increased effect of Fully Broken Armour",
+        "type": "bonded",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 20.0,
+            "max": 40.0,
+            "avg": 33.3
+          }
+        ]
+      },
+      {
+        "name": "# to Accuracy Rating",
+        "type": "prefix",
+        "count": 3,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 176.0,
+            "max": 190.0,
+            "avg": 180.7
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Projectile Skills",
+        "type": "suffix",
+        "count": 2,
+        "percentage": 66.7,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Attack Skills",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 33.3,
+        "values": [
+          {
+            "min": 3.0,
+            "max": 3.0,
+            "avg": 3.0
+          }
+        ]
+      },
+      {
+        "name": "Gain #% of Damage as Extra Damage of all Elements",
+        "type": "rune",
+        "count": 1,
+        "percentage": 33.3,
+        "values": [
+          {
+            "min": 5.0,
+            "max": 5.0,
+            "avg": 5.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% chance to gain an additional random Charge when you gain a Charge",
+        "type": "bonded",
+        "count": 1,
+        "percentage": 33.3,
+        "values": [
+          {
+            "min": 8.0,
+            "max": 8.0,
+            "avg": 8.0
+          }
+        ]
+      }
+    ]
+  },
+  "Gold Amulet": {
+    "total_items": 1,
+    "stats": [
+      {
+        "name": "#% increased Rarity of Items found",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 17.0,
+            "max": 17.0,
+            "avg": 17.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Projectile Skills",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 3.0,
+            "max": 3.0,
+            "avg": 3.0
+          }
+        ]
+      },
+      {
+        "name": "# to all Attributes",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 21.0,
+            "max": 21.0,
+            "avg": 21.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Global Defences",
+        "type": "explicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 32.0,
+            "max": 32.0,
+            "avg": 32.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Rarity of Items found",
+        "type": "implicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 15.0,
+            "max": 15.0,
+            "avg": 15.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased maximum Energy Shield",
+        "type": "fractured",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 54.0,
+            "max": 54.0,
+            "avg": 54.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Rarity of Items found",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 19.0,
+            "max": 19.0,
+            "avg": 19.0
+          }
+        ]
+      }
+    ]
+  },
+  "Dreaming Quarterstaff": {
+    "total_items": 1,
+    "stats": [
+      {
+        "name": "#% increased Physical Damage",
+        "type": "explicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 258.0,
+            "max": 258.0,
+            "avg": 258.0
+          }
+        ]
+      },
+      {
+        "name": "# to Accuracy Rating",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 187.0,
+            "max": 187.0,
+            "avg": 187.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Melee Skills",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 7.0,
+            "max": 7.0,
+            "avg": 7.0
+          }
+        ]
+      },
+      {
+        "name": "#% chance to gain Onslaught on Killing Hits with this Weapon",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 22.0,
+            "max": 22.0,
+            "avg": 22.0
+          }
+        ]
+      },
+      {
+        "name": "Adds # to # Physical Damage",
+        "type": "fractured",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 55.0,
+            "max": 55.0,
+            "avg": 55.0
+          },
+          {
+            "min": 94.0,
+            "max": 94.0,
+            "avg": 94.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Physical Damage",
+        "type": "rune",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 54.0,
+            "max": 54.0,
+            "avg": 54.0
+          }
+        ]
+      },
+      {
+        "name": "Bonded: #% increased effect of Fully Broken Armour",
+        "type": "bonded",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 60.0,
+            "max": 60.0,
+            "avg": 60.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Attack Speed",
+        "type": "suffix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 28.0,
+            "max": 28.0,
+            "avg": 28.0
+          }
+        ]
+      }
+    ]
+  },
+  "Penumbra Amulet": {
+    "total_items": 1,
+    "stats": [
+      {
+        "name": "#% increased Evasion Rating",
+        "type": "explicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 54.0,
+            "max": 54.0,
+            "avg": 54.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased maximum Energy Shield",
+        "type": "explicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 58.0,
+            "max": 58.0,
+            "avg": 58.0
+          }
+        ]
+      },
+      {
+        "name": "# to Spirit",
+        "type": "prefix",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 50.0,
+            "max": 50.0,
+            "avg": 50.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Global Defences",
+        "type": "explicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 33.0,
+            "max": 33.0,
+            "avg": 33.0
+          }
+        ]
+      },
+      {
+        "name": "# Prefix Modifiers allowed",
+        "type": "implicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 2.0,
+            "max": 2.0,
+            "avg": 2.0
+          }
+        ]
+      },
+      {
+        "name": "# Suffix Modifiers allowed",
+        "type": "implicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 2.0,
+            "max": 2.0,
+            "avg": 2.0
+          }
+        ]
+      },
+      {
+        "name": "# to Level of all Projectile Skills",
+        "type": "fractured",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 3.0,
+            "max": 3.0,
+            "avg": 3.0
+          }
+        ]
+      },
+      {
+        "name": "#% increased Energy Shield from Equipped Body Armour",
+        "type": "explicit",
+        "count": 1,
+        "percentage": 100.0,
+        "values": [
+          {
+            "min": 55.0,
+            "max": 55.0,
+            "avg": 55.0
+          }
+        ]
+      }
+    ]
+  }
+}

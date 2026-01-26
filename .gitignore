@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+__pycache__/
+*.pyc
+venv/
+.venv/
+env/
+
+# Build outputs
+dist/
+build/
+
+# System
+.DS_Store
+Thumbs.db
+
+# Project Data
+saved_data/
+*Mirrored items_files/
+*.htm
+*.html
+!index.html
+
+# Environment
+.env
