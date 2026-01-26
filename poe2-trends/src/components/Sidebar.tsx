@@ -115,15 +115,15 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
   };
 
   return (
-    <div className="w-64 bg-poe-card border-r border-poe-border h-screen overflow-y-auto flex flex-col fixed left-0 top-0">
-      <div className="p-6 border-b border-poe-border bg-gradient-to-b from-poe-card to-black">
+    <div className="w-64 bg-poe-card border-r border-poe-border h-screen flex flex-col fixed left-0 top-0">
+      <div className="p-6 border-b border-poe-border bg-gradient-to-b from-poe-card to-black shrink-0">
         <h1 className="font-serif text-2xl text-poe-gold font-bold tracking-wider">
           POE2 <span className="text-poe-red">META</span>
         </h1>
         <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest">Mirror Tier Stats</p>
       </div>
       
-      <div className="p-4 border-b border-poe-border bg-black/20">
+      <div className="p-4 border-b border-poe-border bg-black/20 shrink-0">
         <label className="text-[10px] text-gray-400 uppercase font-bold mb-2 block">
           Paste Trade Query JSON
         </label>
@@ -188,50 +188,52 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
         )}
       </div>
       
-      {/* Saved Searches List */}
-      {savedSearches.length > 0 && (
-          <div className="border-b border-poe-border/30 bg-black/10">
-              <h3 className="px-4 py-2 text-[10px] uppercase font-bold text-gray-500 tracking-wider">History</h3>
-              <div className="max-h-40 overflow-y-auto custom-scrollbar">
-                  {savedSearches.map((item) => (
-                      <button
-                          key={item.filename}
-                          onClick={() => loadHistoryItem(item.filename)}
-                          className="w-full text-left px-4 py-2 hover:bg-white/5 group border-l-2 border-transparent hover:border-gray-600 transition-all"
-                      >
-                          <div className="text-xs text-gray-300 font-medium truncate group-hover:text-white">
-                              {item.name}
-                          </div>
-                          <div className="text-[10px] text-gray-600 group-hover:text-gray-500">
-                              {item.date}
-                          </div>
-                      </button>
-                  ))}
-              </div>
-          </div>
-      )}
-
-      <div className="flex-1 py-4">
-        {types.length === 0 ? (
-           <p className="text-gray-500 text-xs px-6">No data loaded.</p>
-        ) : (
-            types.map(type => (
-              <button
-                key={type}
-                onClick={() => onSelect(type)}
-                className={`w-full text-left px-6 py-3 text-sm transition-all relative
-                  ${activeType === type 
-                    ? 'text-poe-highlight bg-white/5 border-l-2 border-poe-gold' 
-                    : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border-l-2 border-transparent'
-                  }`}
-              >
-                {type}
-              </button>
-            ))
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
+        {/* Saved Searches List */}
+        {savedSearches.length > 0 && (
+            <div className="border-b border-poe-border/30 bg-black/10">
+                <h3 className="px-4 py-2 text-[10px] uppercase font-bold text-gray-500 tracking-wider">History</h3>
+                <div className="max-h-40 overflow-y-auto custom-scrollbar">
+                    {savedSearches.map((item) => (
+                        <button
+                            key={item.filename}
+                            onClick={() => loadHistoryItem(item.filename)}
+                            className="w-full text-left px-4 py-2 hover:bg-white/5 group border-l-2 border-transparent hover:border-gray-600 transition-all"
+                        >
+                            <div className="text-xs text-gray-300 font-medium truncate group-hover:text-white">
+                                {item.name}
+                            </div>
+                            <div className="text-[10px] text-gray-600 group-hover:text-gray-500">
+                                {item.date}
+                            </div>
+                        </button>
+                    ))}
+                </div>
+            </div>
         )}
+
+        <div className="py-4">
+          {types.length === 0 ? (
+             <p className="text-gray-500 text-xs px-6">No data loaded.</p>
+          ) : (
+              types.map(type => (
+                <button
+                  key={type}
+                  onClick={() => onSelect(type)}
+                  className={`w-full text-left px-6 py-3 text-sm transition-all relative
+                    ${activeType === type 
+                      ? 'text-poe-highlight bg-white/5 border-l-2 border-poe-gold' 
+                      : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border-l-2 border-transparent'
+                    }`}
+                >
+                  {type}
+                </button>
+              ))
+          )}
+        </div>
       </div>
       
-      <div className="p-4 border-t border-poe-border text-xs text-gray-600 text-center flex flex-col gap-2">
+      <div className="p-4 border-t border-poe-border text-xs text-gray-600 text-center flex flex-col gap-2 shrink-0 bg-poe-card">
         <Link 
           to="/tablet-modifiers" 
           className="text-poe-gold hover:text-poe-highlight transition-colors underline"
