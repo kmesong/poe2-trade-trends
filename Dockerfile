@@ -22,8 +22,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY backend/ .
 
 # Copy built frontend assets from Stage 1 to where Flask expects them
-# We configured Flask to look in ../poe2-trends/dist
-COPY --from=build-frontend /app/frontend/dist /app/poe2-trends/dist
+# We configured Flask to look in ../poe2-trends/dist (relative to /app/server.py)
+# So we need to place them at /poe2-trends/dist
+COPY --from=build-frontend /app/frontend/dist /poe2-trends/dist
 
 # Expose port 5000
 EXPOSE 5000
