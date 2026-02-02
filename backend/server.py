@@ -33,7 +33,8 @@ app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and create tables
 init_db(app)
-db.create_all()
+with app.app_context():
+    db.create_all()
 @app.route('/')
 def index():
     try:
