@@ -22,8 +22,14 @@ from backend.database import (
 )
 
 app = Flask(__name__, static_folder='../../poe2-trends/dist', static_url_path='/')
+CORS(app)
 
-# Serve React App
+# Ensure instance folder exists for SQLite database
+os.makedirs('instance', exist_ok=True)
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///poe2_trade.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 @app.route('/')
 def index():
     try:
