@@ -30,8 +30,8 @@ def test_analyze_gap_success(MockTradeAPI, mock_currency_service):
         },
         {
             "result": [
-                {"listing": {"price": {"amount": 1, "currency": "divine"}}, "extended": {"mods": {"explicit": [{"tier": "P1"}]}}}, # 10 chaos
-                {"listing": {"price": {"amount": 1.2, "currency": "divine"}}, "extended": {"mods": {"explicit": [{"tier": "S1"}]}}} # 12 chaos
+                {"listing": {"price": {"amount": 1, "currency": "divine"}}, "item": {"extended": {"mods": {"explicit": [{"tier": "P1"}]}}}}, # 10 chaos
+                {"listing": {"price": {"amount": 1.2, "currency": "divine"}}, "item": {"extended": {"mods": {"explicit": [{"tier": "S1"}]}}}} # 12 chaos
             ]
         }
     ]
@@ -85,10 +85,10 @@ def test_get_average_price_recursive(mock_sleep, MockTradeAPI, mock_currency_ser
     mock_api.search.return_value = {"result": [f"item{i}" for i in range(20)], "id": "search_recursive"}
     
     # Batch 1: Items that fail validation (T2 mods)
-    batch1_items = [{"id": f"item{i}", "extended": {"mods": {"explicit": [{"tier": "P2"}]}}} for i in range(10)]
+    batch1_items = [{"id": f"item{i}", "item": {"extended": {"mods": {"explicit": [{"tier": "P2"}]}}}} for i in range(10)]
     # Batch 2: Items that pass validation (T1 mods)
     batch2_items = [
-        {"listing": {"price": {"amount": 20, "currency": "chaos"}}, "extended": {"mods": {"explicit": [{"tier": "P1"}]}}} 
+        {"listing": {"price": {"amount": 20, "currency": "chaos"}}, "item": {"extended": {"mods": {"explicit": [{"tier": "P1"}]}}}} 
         for i in range(5)
     ]
     
@@ -132,7 +132,7 @@ def test_analyze_gap_price_ramp(MockTradeAPI, mock_currency_service):
             "result": [
                 {
                     "listing": {"price": {"amount": 50, "currency": "chaos"}},
-                    "extended": {"mods": {"explicit": [{"tier": "P1"}]}}
+                    "item": {"extended": {"mods": {"explicit": [{"tier": "P1"}]}}}
                 }
             ]
         }
@@ -144,4 +144,21 @@ def test_analyze_gap_price_ramp(MockTradeAPI, mock_currency_service):
     assert result["normal_avg_chaos"] == 10.0
     assert result["magic_avg_chaos"] == 50.0
     assert mock_api.search.call_count == 3 # 1 normal + 2 magic attempts
+
+def test_is_t1_magic_ignores_implicits():
+    analyzer = PriceAnalyzer()
+    
+    # Mock item with implicit (no tier) and T1 explicit
+    mock_item = {
+        "item": {
+            "extended": {
+                "mods": {
+                    "implicit": [{"text": "Some implicit"}], # Should be ignored
+                    "explicit": [{"tier": "P1"}]
+                }
+            }
+        }
+    }
+    
+    assert analyzer._is_t1_magic(mock_item) is True
 
