@@ -36,7 +36,7 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
 
   const fetchHistory = async () => {
     try {
-      const res = await fetch('http://localhost:5000/history');
+      const res = await fetch('/history');
       if (res.ok) {
         setSavedSearches(await res.json());
       }
@@ -53,7 +53,7 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
     setShowSaveInput(false);
     
     try {
-      const response = await fetch('http://localhost:5000/analyze', {
+      const response = await fetch('/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query_text: queryInput }),
@@ -79,7 +79,7 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
     if (!saveName.trim() || !data) return;
     
     try {
-      const response = await fetch('http://localhost:5000/save', {
+      const response = await fetch('/save', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -104,7 +104,7 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
 
   const loadHistoryItem = async (filename: string) => {
     try {
-      const res = await fetch(`http://localhost:5000/history/${filename}`);
+      const res = await fetch(`/history/${filename}`);
       if (res.ok) {
         const historyData = await res.json();
         if (onDataRefresh) onDataRefresh(historyData);

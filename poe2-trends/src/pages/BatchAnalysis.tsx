@@ -140,7 +140,7 @@ export const BatchAnalysis: React.FC = () => {
         
         setCurrentBase(base);
 
-        const response = await fetch('http://localhost:5000/analyze/batch-price', {
+        const response = await fetch('/analyze/batch-price', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
