@@ -1,19 +1,21 @@
-import React, { useState } from 'react';
-import { getSessionId } from '../utils/storage';
+import React, { useState, useEffect } from 'react';
+import { getSessionId, getBatchInput, saveBatchInput, getBatchResults, saveBatchResults } from '../utils/storage';
 import { Link } from 'react-router-dom';
-
-interface BatchResult {
-  base_type: string;
-  normal_avg_chaos: number;
-  magic_avg_chaos: number;
-  gap_chaos: number;
-}
+import { BatchResult } from '../types';
 
 export const BatchAnalysis: React.FC = () => {
-  const [input, setInput] = useState('');
-  const [results, setResults] = useState<BatchResult[]>([]);
+  const [input, setInput] = useState(() => getBatchInput());
+  const [results, setResults] = useState<BatchResult[]>(() => getBatchResults());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    saveBatchInput(input);
+  }, [input]);
+
+  useEffect(() => {
+    saveBatchResults(results);
+  }, [results]);
 
   const handleAnalyze = async () => {
     const sessionId = getSessionId();

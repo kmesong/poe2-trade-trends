@@ -20,3 +20,10 @@ export interface WeaponData {
 export interface Data {
   [key: string]: WeaponData;
 }
+
+export interface BatchResult {
+  base_type: string;
+  normal_avg_chaos: number;
+  magic_avg_chaos: number;
+  gap_chaos: number;
+}
