@@ -100,9 +100,9 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
                 }
               });
             }
-          });
-        }
-      });
+          }
+        });
+      }
     }
 
     return result;
