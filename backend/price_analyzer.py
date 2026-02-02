@@ -48,16 +48,22 @@ class PriceAnalyzer:
 
     def _is_t1_magic(self, item):
         """
-        Validator to check if a magic item has at least one Tier 1 (P1 or S1) modifier.
+        Validator to check if a magic item has ONLY Tier 1 (P1 or S1) modifiers.
+        Returns False if no modifiers are found or if any modifier is not Tier 1.
         """
         mods = item.get("extended", {}).get("mods", {})
+        has_any_mod = False
+        
         for mod_group in mods.values():
             if isinstance(mod_group, list):
                 for mod in mod_group:
+                    has_any_mod = True
                     tier = mod.get("tier", "")
-                    if tier and (tier.startswith("P1") or tier.startswith("S1")):
-                        return True
-        return False
+                    # If any mod is NOT T1, return False immediately
+                    if not (tier and (tier.startswith("P1") or tier.startswith("S1"))):
+                        return False
+        
+        return has_any_mod
 
     def _get_average_price(self, api, query, item_validator=None):
         try:
