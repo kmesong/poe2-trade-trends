@@ -13,7 +13,7 @@ class PriceAnalyzer:
         """
         api = TradeAPI(session_id)
         
-        # 1. Search Normal
+        # 1. Search Normal (with ilvl 82 and rune sockets filter)
         normal_query = {
             "status": {"option": "online"},
             "type": base_type,
@@ -21,6 +21,16 @@ class PriceAnalyzer:
                 "type_filters": {
                     "filters": {
                         "rarity": {"option": "normal"}
+                    }
+                },
+                "misc_filters": {
+                    "filters": {
+                        "ilvl": {"min": 82}
+                    }
+                },
+                "equipment_filters": {
+                    "filters": {
+                        "rune_sockets": {"min": 2}
                     }
                 }
             }
