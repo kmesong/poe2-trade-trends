@@ -15,7 +15,7 @@ class PriceAnalyzer:
         
         # 1. Search Normal (base search - all normal items)
         normal_query = {
-            "status": {"option": "online"},
+            "status": {"option": "securable"},
             "type": base_type,
             "filters": {
                 "type_filters": {
@@ -31,7 +31,7 @@ class PriceAnalyzer:
         
         # 2. Search Normal with filters (ilvl 82, min 2 rune sockets) - for crafting base price
         normal_craft_query = {
-            "status": {"option": "online"},
+            "status": {"option": "securable"},
             "type": base_type,
             "filters": {
                 "type_filters": {
@@ -60,7 +60,7 @@ class PriceAnalyzer:
         
         # 3. Search Magic
         magic_query = {
-            "status": {"option": "online"},
+            "status": {"option": "securable"},
             "type": base_type,
             "filters": {
                 "type_filters": {
