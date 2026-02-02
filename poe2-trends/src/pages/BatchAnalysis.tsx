@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getSessionId, getBatchInput, saveBatchInput, getBatchResults, saveBatchResults } from '../utils/storage';
 import { Link } from 'react-router-dom';
 import { BatchResult } from '../types';
@@ -8,6 +8,10 @@ export const BatchAnalysis: React.FC = () => {
   const [results, setResults] = useState<BatchResult[]>(() => getBatchResults());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [currentBase, setCurrentBase] = useState<string | null>(null);
+  const [totalBases, setTotalBases] = useState(0);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     saveBatchInput(input);
@@ -16,6 +20,10 @@ export const BatchAnalysis: React.FC = () => {
   useEffect(() => {
     saveBatchResults(results);
   }, [results]);
+
+  const handleStop = () => {
+    abortControllerRef.current?.abort();
+  };
 
   const handleAnalyze = async () => {
     const sessionId = getSessionId();
@@ -33,9 +41,19 @@ export const BatchAnalysis: React.FC = () => {
     setLoading(true);
     setError(null);
     setResults([]);
+    setTotalBases(bases.length);
+    setCurrentBase(null);
+    
+    abortControllerRef.current = new AbortController();
 
     try {
-      for (const base of bases) {
+      for (let i = 0; i < bases.length; i++) {
+        const base = bases[i];
+        
+        if (abortControllerRef.current?.signal.aborted) break;
+        
+        setCurrentBase(base);
+
         const response = await fetch('http://localhost:5000/analyze/batch-price', {
           method: 'POST',
           headers: {
@@ -43,6 +61,7 @@ export const BatchAnalysis: React.FC = () => {
             'X-POESESSID': sessionId
           },
           body: JSON.stringify({ bases: [base] }),
+          signal: abortControllerRef.current?.signal
         });
 
         if (!response.ok) {
@@ -55,18 +74,23 @@ export const BatchAnalysis: React.FC = () => {
           setResults(prev => [...prev, data[0]]);
         }
 
-        if (bases.indexOf(base) < bases.length - 1) {
+        if (i < bases.length - 1) {
+          if (abortControllerRef.current?.signal.aborted) break;
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
     } catch (err: unknown) {
-      if (err instanceof Error) {
+      if (err instanceof Error && err.name === 'AbortError') {
+        console.log('Analysis stopped by user');
+      } else if (err instanceof Error) {
         setError(err.message);
       } else {
         setError('An unexpected error occurred');
       }
     } finally {
       setLoading(false);
+      setCurrentBase(null);
+      abortControllerRef.current = null;
     }
   };
 
@@ -100,17 +124,21 @@ export const BatchAnalysis: React.FC = () => {
             </div>
           )}
 
-          <button
-            onClick={handleAnalyze}
-            disabled={loading}
-            className={`w-full py-3 rounded text-sm font-bold uppercase tracking-widest transition-all shadow-lg
-              ${loading 
-                ? 'bg-gray-800 text-gray-500 cursor-not-allowed' 
-                : 'bg-gradient-to-r from-poe-red/80 to-poe-red hover:from-red-600 hover:to-red-500 text-white border border-red-900'
-              }`}
-          >
-            {loading ? 'Analyzing Market...' : 'Analyze Bases'}
-          </button>
+          {loading ? (
+            <button
+              onClick={handleStop}
+              className="w-full py-3 rounded text-sm font-bold uppercase tracking-widest transition-all shadow-lg bg-gray-800 hover:bg-gray-700 text-red-400 border border-poe-border"
+            >
+              Stop Analysis
+            </button>
+          ) : (
+            <button
+              onClick={handleAnalyze}
+              className="w-full py-3 rounded text-sm font-bold uppercase tracking-widest transition-all shadow-lg bg-gradient-to-r from-poe-red/80 to-poe-red hover:from-red-600 hover:to-red-500 text-white border border-red-900"
+            >
+              Analyze Bases
+            </button>
+          )}
         </div>
       </div>
 
@@ -120,27 +148,41 @@ export const BatchAnalysis: React.FC = () => {
           <div className="flex justify-between items-center mb-6 border-b border-poe-border pb-2">
             <h3 className="text-lg text-poe-highlight font-serif">Market Gap Analysis</h3>
             <div className="flex items-center gap-4">
-              {loading && (
-                <div className="text-xs text-poe-gold animate-pulse font-bold uppercase tracking-widest">
-                  Processing...
-                </div>
-              )}
               <div className="text-xs text-gray-500">
                 {results.length} Results Found
               </div>
             </div>
           </div>
 
+          {loading && (
+            <div className="mb-8 p-4 bg-black/40 border border-poe-border/50 rounded-lg shadow-inner">
+              <div className="flex justify-between items-end mb-3">
+                <div className="flex flex-col">
+                  <span className="text-[10px] text-gray-500 uppercase font-bold tracking-[0.2em] mb-1">Current Task</span>
+                  <span className="text-sm text-poe-gold font-serif italic tracking-wide">
+                    Analyzing {currentBase || 'Market'}...
+                  </span>
+                </div>
+                <div className="text-right">
+                  <span className="text-[10px] text-gray-500 uppercase font-bold tracking-[0.2em] mb-1 block">Progress</span>
+                  <span className="text-sm font-mono text-poe-highlight">
+                    {results.length} <span className="text-gray-600">/</span> {totalBases}
+                  </span>
+                </div>
+              </div>
+              <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-poe-border/20 p-[1px]">
+                <div 
+                  className="h-full bg-gradient-to-r from-poe-gold/40 via-poe-gold to-poe-golddim rounded-full shadow-[0_0_12px_rgba(233,176,79,0.3)] transition-all duration-700 ease-out"
+                  style={{ width: `${Math.min(100, (results.length / totalBases) * 100)}%` }}
+                />
+              </div>
+            </div>
+          )}
+
           {results.length === 0 && !loading && (
             <div className="text-center py-20 text-gray-600 italic">
               Enter base types on the left to analyze profit gaps.
             </div>
-          )}
-
-          {loading && results.length === 0 && (
-             <div className="text-center py-20 text-poe-gold animate-pulse">
-               Fetching live trade data... this may take a moment.
-             </div>
           )}
 
           {results.length > 0 && (
