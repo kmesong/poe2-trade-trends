@@ -17,7 +17,7 @@ WORKDIR /app
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY backend/ .
+COPY backend/ backend/
 
 COPY --from=build-frontend /app/frontend/dist /poe2-trends/dist
 
