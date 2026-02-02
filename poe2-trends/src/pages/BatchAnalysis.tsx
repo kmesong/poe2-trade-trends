@@ -62,10 +62,6 @@ export const BatchAnalysis: React.FC = () => {
         console.error('Failed to parse API response:', e, text.substring(0, 100));
         throw new Error('Invalid API response format');
       }
-      } catch (e) {
-        console.error('Failed to parse API response:', e, text.substring(0, 100));
-        throw new Error('Invalid API response format');
-      }
     } catch (err) {
       console.error('Failed to load history', err);
       toast.error('Failed to load current data');
