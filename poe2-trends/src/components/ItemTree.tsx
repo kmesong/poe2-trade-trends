@@ -175,7 +175,7 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
     notifySelection(newSelected);
   };
 
-  const toggleCategoryAll = (category: string, categoryItems: ItemEntry[]) => {
+  const toggleCategoryAll = (_category: string, categoryItems: ItemEntry[]) => {
     const allSelected = categoryItems.every(item => selectedItems.has(item.id));
     const newSelected = new Set(selectedItems);
     
@@ -232,9 +232,9 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
       {/* Header */}
       <div className="p-4 bg-black/40 border-b border-poe-border">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-poe-highlight font-bold">
-            Select Items ({selectedItems.length} selected)
-          </h3>
+            <h3 className="text-poe-highlight font-bold">
+              Select Items ({selectedItems.size} selected)
+            </h3>
           <div className="flex gap-2">
             <button
               onClick={selectAll}

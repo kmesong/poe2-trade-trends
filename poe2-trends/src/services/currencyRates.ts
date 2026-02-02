@@ -100,8 +100,8 @@ export async function refreshRates(): Promise<CurrencyRates> {
   }
 }
 
-export function formatCurrency(amount: number, currency: string = 'exalted'): string {
-  const rates = getRates() || DEFAULT_RATES;
+export async function formatCurrency(amount: number, currency: string = 'exalted'): Promise<string> {
+  const rates = await getRates() || DEFAULT_RATES;
   const rate = rates[currency.toLowerCase()] || rates.exalted || 1;
   const exalts = amount * rate;
   
@@ -114,14 +114,14 @@ export function formatCurrency(amount: number, currency: string = 'exalted'): st
   }
 }
 
-export function chaosToExalted(chaosAmount: number): number {
-  const rates = getRates() || DEFAULT_RATES;
-  return chaosAmount * (rates.chaos || 0.00556);
+export async function chaosToExalted(chaosAmount: number): Promise<number> {
+  const rates = await getRates() || DEFAULT_RATES;
+  return chaosAmount * (rates.chaos ? 1 / rates.chaos : 180);
 }
 
-export function exaltedToChaos(exAmount: number): number {
-  const rates = getRates() || DEFAULT_RATES;
-  const chaosRate = rates.chaos || 0.00556;
+export async function exaltedToChaos(exAmount: number): Promise<number> {
+  const rates = await getRates() || DEFAULT_RATES;
+  const chaosRate = rates.chaos ? 1 / rates.chaos : 180;
   return exAmount / chaosRate;
 }
 
