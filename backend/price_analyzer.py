@@ -13,8 +13,24 @@ class PriceAnalyzer:
         """
         api = TradeAPI(session_id)
         
-        # 1. Search Normal (with ilvl 82 and rune sockets filter)
+        # 1. Search Normal (base search - all normal items)
         normal_query = {
+            "status": {"option": "online"},
+            "type": base_type,
+            "filters": {
+                "type_filters": {
+                    "filters": {
+                        "rarity": {"option": "normal"}
+                    }
+                }
+            }
+        }
+        normal_result = self._get_search_result(api, normal_query)
+        normal_avg, normal_mods = self._calculate_average_from_result(api, normal_result, exclusions=exclusions)
+        search_id = normal_result.get("id") if normal_result else None
+        
+        # 2. Search Normal with filters (ilvl 82, min 2 rune sockets) - for crafting base price
+        normal_craft_query = {
             "status": {"option": "online"},
             "type": base_type,
             "filters": {
@@ -35,11 +51,14 @@ class PriceAnalyzer:
                 }
             }
         }
-        normal_result = self._get_search_result(api, normal_query)
-        normal_avg, normal_mods = self._calculate_average_from_result(api, normal_result, exclusions=exclusions)
-        search_id = normal_result.get("id") if normal_result else None
+        normal_craft_result = self._get_search_result(api, normal_craft_query)
+        normal_craft_avg, _ = self._calculate_average_from_result(api, normal_craft_result, exclusions=exclusions)
         
-        # 2. Search Magic
+        # Use the filtered normal price as the base for calculations
+        # This represents the price of usable crafting bases
+        normal_avg = normal_craft_avg
+        
+        # 3. Search Magic
         magic_query = {
             "status": {"option": "online"},
             "type": base_type,
