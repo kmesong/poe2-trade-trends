@@ -44,7 +44,27 @@ class PriceAnalyzer:
                 }
             }
         }
-        magic_avg = self._get_average_price(api, magic_query, item_validator=self._is_t1_magic)
+        
+        # Implement Price Ramp Logic
+        start_price = max(1.0, normal_avg * 2.0)
+        magic_avg = 0.0
+        
+        for attempt in range(15):
+            current_min_price = start_price * (2 ** attempt)
+            print(f"Attempting to fetch Magic items for {base_type} with min price: {current_min_price} (Attempt {attempt})")
+            
+            magic_avg = self._get_average_price(
+                api, 
+                magic_query, 
+                item_validator=self._is_t1_magic,
+                min_price_filter=current_min_price
+            )
+            
+            if magic_avg > 0:
+                print(f"Found Magic items! Average price: {magic_avg}")
+                break
+            else:
+                print(f"No Magic items found at min price {current_min_price}")
         
         return {
             "base_type": base_type,
