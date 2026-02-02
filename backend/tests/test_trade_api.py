@@ -57,3 +57,22 @@ def test_search_without_session_id():
         
         request = m.request_history[0]
         assert "Cookie" not in request.headers or "POESESSID" not in request.headers.get("Cookie", "")
+
+def test_search_handles_429_retry():
+    api = TradeAPI()
+    
+    with requests_mock.Mocker() as m:
+        # First call returns 429, second returns 200
+        m.register_uri('POST', "https://www.pathofexile.com/api/trade2/search/poe2/Fate%20of%20the%20Vaal", [
+            {'json': {'error': 'Rate limited'}, 'status_code': 429},
+            {'json': {'result': ['item1'], 'id': 'query1'}, 'status_code': 200}
+        ])
+        
+        # Mock time.sleep to avoid waiting in tests
+        import time
+        with pytest.MonkeyPatch().context() as mp:
+            mp.setattr(time, "sleep", lambda x: None)
+            result = api.search({})
+        
+        assert result["id"] == "query1"
+        assert m.call_count == 2
