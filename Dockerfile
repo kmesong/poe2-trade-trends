@@ -14,12 +14,12 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Copy backend code FIRST (before installing dependencies to leverage cache)
-COPY backend/ .
-
-# Install backend dependencies
+# Copy requirements FIRST to leverage Docker cache
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy backend code AFTER dependencies are installed
+COPY backend/ .
 
 # Copy built frontend assets from Stage 1 to where Flask expects them
 # Flask static_folder is configured as '../poe2-trends/dist' relative to server.py
