@@ -33,24 +33,36 @@ export const BatchAnalysis: React.FC = () => {
     setResults([]);
 
     try {
-      const response = await fetch('http://localhost:5000/analyze/batch-price', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-POESESSID': sessionId
-        },
-        body: JSON.stringify({ bases }),
-      });
+      for (const base of bases) {
+        const response = await fetch('http://localhost:5000/analyze/batch-price', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-POESESSID': sessionId
+          },
+          body: JSON.stringify({ bases: [base] }),
+        });
 
-      if (!response.ok) {
+        if (!response.ok) {
+          const data = await response.json();
+          throw new Error(data.error || `Analysis failed for ${base}`);
+        }
+
         const data = await response.json();
-        throw new Error(data.error || 'Analysis failed');
-      }
+        if (data && data.length > 0) {
+          setResults(prev => [...prev, data[0]]);
+        }
 
-      const data = await response.json();
-      setResults(data);
-    } catch (err: any) {
-      setError(err.message);
+        if (bases.indexOf(base) < bases.length - 1) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+      }
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('An unexpected error occurred');
+      }
     } finally {
       setLoading(false);
     }
@@ -105,8 +117,15 @@ export const BatchAnalysis: React.FC = () => {
         <div className="max-w-5xl mx-auto">
           <div className="flex justify-between items-center mb-6 border-b border-poe-border pb-2">
             <h3 className="text-lg text-poe-highlight font-serif">Market Gap Analysis</h3>
-            <div className="text-xs text-gray-500">
-              {results.length} Results Found
+            <div className="flex items-center gap-4">
+              {loading && (
+                <div className="text-xs text-poe-gold animate-pulse font-bold uppercase tracking-widest">
+                  Processing...
+                </div>
+              )}
+              <div className="text-xs text-gray-500">
+                {results.length} Results Found
+              </div>
             </div>
           </div>
 

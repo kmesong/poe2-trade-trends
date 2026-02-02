@@ -354,7 +354,7 @@ def batch_price_analysis():
         print(f"Analyzing {base}...")
         res = analyzer.analyze_gap(base, session_id)
         results.append(res)
-        time.sleep(1) # Rate limit
+        time.sleep(2) # Rate limit
         
     return jsonify(results)
 

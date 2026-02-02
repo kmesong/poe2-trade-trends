@@ -16,15 +16,42 @@ class TradeAPI:
         if self.session_id:
             self.headers["Cookie"] = f"POESESSID={self.session_id}"
 
+    def _request(self, method, url, **kwargs):
+        max_retries = 3
+        retry_delay = 2
+        last_response = None
+
+        for attempt in range(max_retries):
+            response = requests.request(method, url, headers=self.headers, **kwargs)
+            last_response = response
+            
+            if response.status_code == 429:
+                wait_time = retry_delay * (2 ** attempt)
+                retry_after = response.headers.get("Retry-After")
+                if retry_after:
+                    try:
+                        wait_time = int(retry_after) + 1
+                    except ValueError:
+                        pass
+                
+                print(f"Rate limited (429). Waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
+                time.sleep(wait_time)
+                continue
+            
+            response.raise_for_status()
+            return response.json()
+        
+        if last_response is not None:
+            last_response.raise_for_status()
+        raise Exception("Request failed after maximum retries")
+
     def search(self, query, league="Fate of the Vaal"):
         url = f"{self.SEARCH_URL_BASE}{league}"
         payload = {
             "query": query,
             "sort": {"price": "asc"}
         }
-        response = requests.post(url, headers=self.headers, json=payload)
-        response.raise_for_status()
-        return response.json()
+        return self._request("POST", url, json=payload)
 
     def fetch(self, ids, query_id=None):
         if not ids:
@@ -36,6 +63,4 @@ class TradeAPI:
         if query_id:
             params["query"] = query_id
             
-        response = requests.get(url, headers=self.headers, params=params)
-        response.raise_for_status()
-        return response.json()
+        return self._request("GET", url, params=params)
