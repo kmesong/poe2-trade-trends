@@ -47,15 +47,24 @@ class PriceAnalyzer:
             }
         }
         
-        # Implement Price Ramp Logic
+        # Implement Price Ramp Logic - faster progression: 1, 100, 250, 500, 1000, 5000
         start_price = max(1.0, normal_avg * 2.0)
         magic_avg = 0.0
         magic_search_id = None
         magic_mods = []  # Initialize to avoid unbound error
-
-        for attempt in range(15):
-            current_min_price = start_price * (2 ** attempt)
-            print(f"Attempting to fetch Magic items for {base_type} with min price: {current_min_price} (Attempt {attempt})")
+        
+        # Custom price progression
+        price_progression = [1, 100, 250, 500, 1000, 5000]
+        # Scale the progression relative to start_price
+        max_price = price_progression[-1]
+        scale_factor = start_price / max_price if start_price > max_price else 1.0
+        
+        for attempt, base_price in enumerate(price_progression):
+            # Scale the price point
+            current_min_price = base_price * scale_factor
+            current_min_price = max(current_min_price, price_progression[0])  # Ensure we start at least at the first tier
+            
+            print(f"Attempting to fetch Magic items for {base_type} with min price: {current_min_price:.2f} (Attempt {attempt + 1})")
 
             # Apply min price filter to query and execute search
             filtered_query = copy.deepcopy(magic_query)

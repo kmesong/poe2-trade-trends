@@ -19,6 +19,8 @@ export const BatchAnalysis: React.FC = () => {
   const [totalBases, setTotalBases] = useState(0);
   const [processedCount, setProcessedCount] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
+  const [rateLimitWait, setRateLimitWait] = useState<number | null>(null);
+  const [isRateLimited, setIsRateLimited] = useState(false);
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -149,18 +151,41 @@ export const BatchAnalysis: React.FC = () => {
         });
 
         if (!response.ok) {
-          const data = await response.json();
-          const errorMsg = data.error || `Analysis failed for ${base}`;
+          const contentType = response.headers.get('content-type');
+          let errorMsg = `Analysis failed for ${base}`;
+          let waitSeconds = 0;
           
-          // Check for specific error types
+          if (contentType && contentType.includes('application/json')) {
+            const data = await response.json();
+            errorMsg = data.error || errorMsg;
+            
+            const retryAfter = response.headers.get('retry-after');
+            if (retryAfter) {
+              waitSeconds = parseInt(retryAfter, 10) || 60;
+            }
+          }
+          
           if (errorMsg.includes('502') || errorMsg.includes('Bad Gateway')) {
-            toast.error(`Server busy (502) for ${base} - retrying...`);
+            setIsRateLimited(true);
+            setRateLimitWait(30);
+            toast.error(`Server busy (502) - waiting 30s...`);
+            await new Promise(resolve => setTimeout(resolve, 30000));
+            setIsRateLimited(false);
+            setRateLimitWait(null);
+            i--; 
+            continue;
           } else if (errorMsg.includes('429') || errorMsg.includes('Rate limit')) {
-            toast.error(`Rate limited - slowing down...`);
+            setIsRateLimited(true);
+            setRateLimitWait(waitSeconds || 60);
+            toast.error(`Rate limited - waiting ${waitSeconds || 60}s...`);
+            await new Promise(resolve => setTimeout(resolve, (waitSeconds || 60) * 1000));
+            setIsRateLimited(false);
+            setRateLimitWait(null);
+            i--; 
+            continue;
           } else {
             toast.error(errorMsg);
           }
-          // Continue to next item even if one fails
           setProcessedCount(prev => prev + 1);
           continue; 
         }
@@ -279,8 +304,10 @@ export const BatchAnalysis: React.FC = () => {
               <div className="flex justify-between items-end mb-3">
                 <div className="flex flex-col">
                   <span className="text-[10px] text-gray-500 uppercase font-bold tracking-[0.2em] mb-1">Current Task</span>
-                  <span className="text-sm text-poe-gold font-serif italic tracking-wide">
-                    Analyzing {currentBase || 'Market'}...
+                  <span className={`text-sm font-serif italic tracking-wide ${isRateLimited ? 'text-red-400' : 'text-poe-gold'}`}>
+                    {isRateLimited 
+                      ? `Rate Limited - Waiting ${rateLimitWait || '...'}s...` 
+                      : `Analyzing ${currentBase || 'Market'}...`}
                   </span>
                 </div>
                 <div className="text-right">
@@ -292,7 +319,11 @@ export const BatchAnalysis: React.FC = () => {
               </div>
               <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-poe-border/20 p-[1px]">
                 <div 
-                  className="h-full bg-gradient-to-r from-poe-gold/40 via-poe-gold to-poe-golddim rounded-full shadow-[0_0_12px_rgba(233,176,79,0.3)] transition-all duration-700 ease-out"
+                  className={`h-full rounded-full shadow-[0_0_12px_rgba(233,176,79,0.3)] transition-all duration-700 ease-out ${
+                    isRateLimited 
+                      ? 'bg-red-500/50 animate-pulse' 
+                      : 'bg-gradient-to-r from-poe-gold/40 via-poe-gold to-poe-golddim'
+                  }`}
                   style={{ width: `${Math.min(100, (processedCount / totalBases) * 100)}%` }}
                 />
               </div>
