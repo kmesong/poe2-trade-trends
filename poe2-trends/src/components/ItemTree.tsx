@@ -45,7 +45,7 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
   const fetchItems = async () => {
     try {
       setLoading(true);
-      const response = await fetch('http://localhost:5000/api/items');
+      const response = await fetch('/api/items');
       if (!response.ok) {
         throw new Error('Failed to fetch items');
       }
@@ -88,11 +88,14 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
                   const e = entry as { type?: string };
                   if (e.type) {
                     result.push({
-                      id: `${categoryName}-${e.type}-${index}`, 
+                      id: `${e.type}`, 
                       name: e.type,
                       category: categoryName
                     });
                   }
+                }
+              });
+            }
                 }
               });
             }

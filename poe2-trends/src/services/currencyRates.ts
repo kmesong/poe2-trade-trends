@@ -69,7 +69,7 @@ export async function getRates(): Promise<CurrencyRates> {
 
 export async function fetchRatesFromBackend(): Promise<CurrencyRates> {
   try {
-    const response = await fetch('http://localhost:5000/api/currency/rates');
+    const response = await fetch('/api/currency/rates');
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
