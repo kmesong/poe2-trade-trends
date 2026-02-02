@@ -40,6 +40,7 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
 
   useEffect(() => {
     fetchItems();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const fetchItems = async () => {
@@ -88,14 +89,11 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
                   const e = entry as { type?: string };
                   if (e.type) {
                     result.push({
-                      id: `${e.type}`, 
+                      id: `${categoryName}-${e.type}-${index}`, 
                       name: e.type,
                       category: categoryName
                     });
                   }
-                }
-              });
-            }
                 }
               });
             }
@@ -105,6 +103,19 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
     }
 
     return result;
+  };
+
+  const notifySelection = (newSelectedIds: Set<string>) => {
+    const selectedNames = new Set<string>();
+    
+    newSelectedIds.forEach(id => {
+      const item = items.find(i => i.id === id);
+      if (item) {
+        selectedNames.add(item.name);
+      }
+    });
+    
+    onSelectionChange(Array.from(selectedNames));
   };
 
   const categories = useMemo(() => {
@@ -158,7 +169,7 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
       newSelected.add(itemId);
     }
     setSelectedItems(newSelected);
-    onSelectionChange(Array.from(newSelected));
+    notifySelection(newSelected);
   };
 
   const toggleCategoryAll = (category: string, categoryItems: ItemEntry[]) => {
@@ -174,13 +185,14 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
     }
     
     setSelectedItems(newSelected);
-    onSelectionChange(Array.from(newSelected));
+    notifySelection(newSelected);
   };
 
   const selectAll = () => {
     const allIds = filteredItems.map(item => item.id);
-    setSelectedItems(new Set(allIds));
-    onSelectionChange(allIds);
+    const newSelected = new Set(allIds);
+    setSelectedItems(newSelected);
+    notifySelection(newSelected);
   };
 
   const deselectAll = () => {
