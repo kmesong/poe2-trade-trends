@@ -17,8 +17,9 @@ class TradeAPI:
             self.headers["Cookie"] = f"POESESSID={self.session_id}"
 
     def _request(self, method, url, **kwargs):
-        max_retries = 3
-        retry_delay = 2
+        max_retries = 4  # 4 total attempts (3 retries + 1 initial)
+        retry_delay_429 = 2  # Base delay for 429 (rate limit)
+        retry_delay_502 = 5  # Base delay for 502 (server error)
         last_response = None
 
         for attempt in range(max_retries):
@@ -26,7 +27,7 @@ class TradeAPI:
             last_response = response
             
             if response.status_code == 429:
-                wait_time = retry_delay * (2 ** attempt)
+                wait_time = retry_delay_429 * (2 ** attempt)
                 retry_after = response.headers.get("Retry-After")
                 if retry_after:
                     try:
@@ -35,6 +36,12 @@ class TradeAPI:
                         pass
                 
                 print(f"Rate limited (429). Waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
+                time.sleep(wait_time)
+                continue
+            
+            if response.status_code == 502:
+                wait_time = retry_delay_502 * (2 ** attempt)
+                print(f"502 Bad Gateway from GGG server. Waiting {wait_time}s before retry {attempt + 1}/{max_retries}...")
                 time.sleep(wait_time)
                 continue
             
@@ -51,7 +58,8 @@ class TradeAPI:
             "query": query,
             "sort": {"price": "asc"}
         }
-        return self._request("POST", url, json=payload)
+        response = self._request("POST", url, json=payload)
+        return response
 
     def fetch(self, ids, query_id=None):
         if not ids:

@@ -23,3 +23,6 @@ saved_data/
 
 # Environment
 .env
+
+# Flask Instance Folder (Database)
+instance/

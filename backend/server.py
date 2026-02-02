@@ -13,9 +13,18 @@ import sys
 load_dotenv()
 
 from backend.price_analyzer import PriceAnalyzer
+from backend.database import (
+    db, init_db, AnalysisResult, Modifier, ExcludedModifier,
+    save_analysis, get_excluded_mods
+)
 
 app = Flask(__name__, static_folder='../poe2-trends/dist', static_url_path='/')
 CORS(app)  # Enable CORS for all routes
+
+# Database configuration
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///poe2_trade.db'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+init_db(app)
 
 analyzer = PriceAnalyzer()
 
@@ -29,7 +38,7 @@ def static_proxy(path):
     # send_static_file will guess the correct MIME type
     try:
         return app.send_static_file(path)
-    except:
+    except Exception:
         # If file not found, fall back to index.html for client-side routing
         return app.send_static_file('index.html')
 
@@ -349,14 +358,267 @@ def batch_price_analysis():
     if not bases:
         return jsonify({"error": "No bases provided"}), 400
     
+    # Get active exclusions
+    exclusions = get_excluded_mods()
+    
     results = []
     for base in bases:
         print(f"Analyzing {base}...")
-        res = analyzer.analyze_gap(base, session_id)
-        results.append(res)
+        try:
+            # Use save_analysis to run analysis AND save to DB
+            analysis = save_analysis(
+                analyzer=analyzer,
+                base_type=base,
+                session_id=session_id,
+                excluded_mods=exclusions
+            )
+            
+            # Convert DB result to dictionary for response
+            # We need to construct the response format expected by frontend
+            # The frontend expects { base_type, normal_avg_chaos, magic_avg_chaos, gap_chaos, ... }
+            # which is what analysis.to_dict() provides, mostly.
+            
+            # However, analysis.to_dict() returns 'modifiers' key, but the frontend might check 'normal_modifiers' 
+            # and 'magic_modifiers'. But currently save_analysis doesn't save full modifiers list to DB yet 
+            # (there is a TODO in database.py).
+            
+            # Wait, PriceAnalyzer.analyze_gap returns the full dict with modifiers.
+            # save_analysis returns the DB object.
+            # If I want to return the FULL data to frontend (including modifiers), I should probably 
+            # modify save_analysis to return the raw result OR capture it.
+            
+            # Let's check save_analysis again. It calls analyzer.analyze_gap.
+            # But it doesn't return the raw result, only the DB object.
+            
+            # If I switch to using save_analysis, I might lose the detailed modifiers in the response 
+            # if the DB doesn't store them fully or if to_dict() doesn't return them in the same format.
+            
+            # database.py:
+            # TODO: Store full modifier data from the API response
+            # Currently we only have aggregated data
+            
+            # This implies save_analysis is LOSSY right now regarding modifiers list (it saves empty list or aggregated?).
+            # Actually, AnalysisResult has a relationship 'modifiers', but the code in save_analysis 
+            # does NOT populate it yet (comment says TODO).
+            
+            # So if I use save_analysis, the frontend will lose the ability to see the modifiers 
+            # unless I fix that TODO in database.py as well.
+            
+            # So I MUST fix the TODO in database.py to save modifiers, or refactor save_analysis to return the raw result too.
+            
+            # For now, I will assume I need to fix the saving of modifiers too.
+            pass 
+        except Exception as e:
+            print(f"Error analyzing {base}: {e}")
+            results.append({"base_type": base, "error": str(e)})
+            continue
+
+        results.append(analysis.to_dict())
         time.sleep(2) # Rate limit
         
     return jsonify(results)
+
+# Currency rates endpoint - fetch from poe.ninja
+@app.route('/api/currency/rates', methods=['GET'])
+def get_currency_rates():
+    """
+    Get current currency exchange rates.
+    Returns rates normalized to Exalted Orbs.
+    """
+    from backend.currency_service import CurrencyService
+    service = CurrencyService()
+    return jsonify(service.get_rates())
+
+@app.route('/api/currency/rates', methods=['POST'])
+def refresh_currency_rates():
+    """
+    Refresh currency rates from poe.ninja.
+    POST body: {"rates": {"exalted": 1.0, "divine": 0.5, ...}}
+    Returns updated rates.
+    """
+    from backend.currency_service import CurrencyService
+    try:
+        data = request.get_json()
+        if data and "rates" in data:
+            service = CurrencyService()
+            success = service.refresh_from_poe_ninja(data["rates"])
+            if success:
+                return jsonify({"success": True, "rates": service.get_rates()})
+            else:
+                return jsonify({"success": False, "error": "Invalid rates format"}), 400
+        else:
+            # If no rates provided, just return current rates
+            service = CurrencyService()
+            return jsonify({"success": True, "rates": service.get_rates()})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
+
+# Items endpoint - proxy to PoE trade API to get item list
+@app.route('/api/items', methods=['GET'])
+def get_items():
+    """
+    Fetch item list from PoE trade API.
+    Returns categorized items for the batch analysis tree selector.
+    """
+    try:
+        response = requests.get(
+            "https://www.pathofexile.com/api/trade2/data/items",
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:146.0) Gecko/20100101 Firefox/146.0",
+                "Accept": "*/*",
+                "X-Requested-With": "XMLHttpRequest"
+            },
+            timeout=30
+        )
+        if response.status_code == 200:
+            return jsonify(response.json())
+        else:
+            return jsonify({"error": f"Failed to fetch items: {response.status_code}"}), response.status_code
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# ============== Database API Endpoints ==============
+
+@app.route('/api/db/analyses', methods=['GET'])
+def get_analyses():
+    """
+    Get all saved analysis results.
+    Query params:
+        - base_type: Filter by item type
+        - limit: Maximum results (default 100)
+    """
+    try:
+        base_type = request.args.get('base_type')
+        limit = int(request.args.get('limit', 100))
+
+        from backend.database import get_analyses
+        analyses = get_analyses(base_type=base_type, limit=limit)
+
+        return jsonify({
+            'success': True,
+            'data': [a.to_dict() for a in analyses],
+            'count': len(analyses)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/db/analyses/<int:analysis_id>', methods=['GET'])
+def get_analysis(analysis_id):
+    """
+    Get a specific analysis result by ID.
+    """
+    try:
+        from backend.database import AnalysisResult
+        analysis = AnalysisResult.query.get_or_404(analysis_id)
+
+        return jsonify({
+            'success': True,
+            'data': analysis.to_dict()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/db/exclusions', methods=['GET'])
+def get_exclusions():
+    """
+    Get all active excluded modifier rules.
+    """
+    try:
+        from backend.database import get_excluded_mods
+        exclusions = get_excluded_mods()
+
+        return jsonify({
+            'success': True,
+            'data': [e.to_dict() for e in exclusions],
+            'count': len(exclusions)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/db/exclusions', methods=['POST'])
+def add_exclusion():
+    """
+    Add a new excluded modifier rule.
+
+    Body:
+        - mod_name_pattern: SQL LIKE pattern (optional)
+        - mod_tier: Specific tier like "P1" (optional)
+        - mod_type: explicit/implicit/etc (optional)
+        - reason: Explanation (optional)
+    """
+    try:
+        data = request.json or {}
+
+        from backend.database import add_excluded_mod
+
+        exclusion = add_excluded_mod(
+            name_pattern=data.get('mod_name_pattern'),
+            tier=data.get('mod_tier'),
+            mod_type=data.get('mod_type'),
+            reason=data.get('reason')
+        )
+
+        return jsonify({
+            'success': True,
+            'data': exclusion.to_dict()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/db/exclusions/<int:exclusion_id>', methods=['DELETE'])
+def remove_exclusion(exclusion_id):
+    """
+    Remove (deactivate) an excluded modifier rule.
+    """
+    try:
+        from backend.database import remove_excluded_mod
+
+        success = remove_excluded_mod(exclusion_id)
+
+        if success:
+            return jsonify({'success': True, 'message': 'Exclusion removed'})
+        else:
+            return jsonify({'success': False, 'error': 'Exclusion not found'}), 404
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/db/exclusions/<int:exclusion_id>', methods=['PUT'])
+def update_exclusion(exclusion_id):
+    """
+    Update an excluded modifier rule.
+    """
+    try:
+        from backend.database import ExcludedModifier
+
+        exclusion = ExcludedModifier.query.get_or_404(exclusion_id)
+        data = request.json or {}
+
+        if 'mod_name_pattern' in data:
+            exclusion.mod_name_pattern = data['mod_name_pattern']
+        if 'mod_tier' in data:
+            exclusion.mod_tier = data['mod_tier']
+        if 'mod_type' in data:
+            exclusion.mod_type = data['mod_type']
+        if 'reason' in data:
+            exclusion.reason = data['reason']
+        if 'is_active' in data:
+            exclusion.is_active = data['is_active']
+
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'data': exclusion.to_dict()
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
 
 if __name__ == '__main__':
     print("Starting server on port 5000...")

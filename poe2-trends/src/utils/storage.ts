@@ -1,4 +1,4 @@
-import { BatchResult } from '../types';
+import type { BatchResult } from '../types';
 
 export const STORAGE_KEY_SESSION_ID = 'poe_session_id';
 export const STORAGE_KEY_BATCH_INPUT = 'poe_batch_input';

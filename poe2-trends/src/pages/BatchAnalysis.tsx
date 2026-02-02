@@ -1,25 +1,55 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getSessionId, getBatchInput, saveBatchInput, getBatchResults, saveBatchResults } from '../utils/storage';
+import { getSessionId, getBatchResults, saveBatchResults } from '../utils/storage';
 import { Link } from 'react-router-dom';
-import { BatchResult } from '../types';
+import type { BatchResult } from '../types';
+import toast from 'react-hot-toast';
+import { ItemTree } from '../components/ItemTree';
 
 export const BatchAnalysis: React.FC = () => {
-  const [input, setInput] = useState(() => getBatchInput());
+  const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [results, setResults] = useState<BatchResult[]>(() => getBatchResults());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentBase, setCurrentBase] = useState<string | null>(null);
   const [totalBases, setTotalBases] = useState(0);
+  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
-    saveBatchInput(input);
-  }, [input]);
-
-  useEffect(() => {
     saveBatchResults(results);
   }, [results]);
+
+  const toggleRow = (idx: number) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(idx)) {
+      newExpanded.delete(idx);
+    } else {
+      newExpanded.add(idx);
+    }
+    setExpandedRows(newExpanded);
+  };
+
+  const addExclusion = async (modifierName: string, tier: string) => {
+    try {
+      const response = await fetch('/api/db/exclusions', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          mod_name_pattern: `%${modifierName}%`,
+          mod_tier: tier,
+          reason: `Excluded from Batch Analysis`
+        })
+      });
+      if (response.ok) {
+        toast.success(`Excluded "${modifierName}" (${tier})`);
+      } else {
+        toast.error('Failed to add exclusion');
+      }
+    } catch {
+      toast.error('Failed to add exclusion');
+    }
+  };
 
   const handleStop = () => {
     abortControllerRef.current?.abort();
@@ -28,13 +58,17 @@ export const BatchAnalysis: React.FC = () => {
   const handleAnalyze = async () => {
     const sessionId = getSessionId();
     if (!sessionId) {
-      setError('Missing POESESSID. Please configure it in Settings.');
+      const msg = 'Missing POESESSID. Please configure it in Settings.';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
-    const bases = input.split('\n').map(s => s.trim()).filter(Boolean);
+    const bases = selectedItems;
     if (bases.length === 0) {
-      setError('Please enter at least one item base type.');
+      const msg = 'Please select at least one item base type.';
+      setError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -66,7 +100,17 @@ export const BatchAnalysis: React.FC = () => {
 
         if (!response.ok) {
           const data = await response.json();
-          throw new Error(data.error || `Analysis failed for ${base}`);
+          const errorMsg = data.error || `Analysis failed for ${base}`;
+          
+          // Check for specific error types
+          if (errorMsg.includes('502') || errorMsg.includes('Bad Gateway')) {
+            toast.error(`Server busy (502) for ${base} - retrying...`);
+          } else if (errorMsg.includes('429') || errorMsg.includes('Rate limit')) {
+            toast.error(`Rate limited - slowing down...`);
+          } else {
+            toast.error(errorMsg);
+          }
+          throw new Error(errorMsg);
         }
 
         const data = await response.json();
@@ -79,6 +123,7 @@ export const BatchAnalysis: React.FC = () => {
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
       }
+      toast.success('Analysis complete!');
     } catch (err: unknown) {
       if (err instanceof Error && err.name === 'AbortError') {
         console.log('Analysis stopped by user');
@@ -104,14 +149,18 @@ export const BatchAnalysis: React.FC = () => {
         
         <div className="flex-1 flex flex-col min-h-0">
           <label className="text-xs text-gray-400 uppercase font-bold mb-2">
-            Item Bases (One per line)
+            Select Item Bases
           </label>
-          <textarea
-            className="flex-1 bg-black/40 border border-poe-border rounded p-3 text-sm text-poe-highlight focus:border-poe-gold focus:outline-none resize-none font-mono mb-4 custom-scrollbar"
-            placeholder="Expert Laced Boots&#10;Solaris Circlet&#10;Primordial Staff"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
+          <div className="flex-1 min-h-0 mb-4 overflow-hidden">
+            <ItemTree
+              onSelectionChange={(items) => {
+                setSelectedItems(items);
+                if (items.length > 0) {
+                  setError(null);
+                }
+              }}
+            />
+          </div>
           
           {error && (
             <div className="mb-4 p-3 bg-red-950/40 border border-red-900/50 rounded text-red-400 text-xs">
@@ -181,7 +230,7 @@ export const BatchAnalysis: React.FC = () => {
 
           {results.length === 0 && !loading && (
             <div className="text-center py-20 text-gray-600 italic">
-              Enter base types on the left to analyze profit gaps.
+              Select item bases on the left to analyze profit gaps.
             </div>
           )}
 
@@ -191,8 +240,8 @@ export const BatchAnalysis: React.FC = () => {
                 <thead className="bg-black/60 text-poe-golddim uppercase text-xs tracking-wider font-bold">
                   <tr>
                     <th className="p-4 border-b border-poe-border">Base Type</th>
-                    <th className="p-4 border-b border-poe-border text-right">Normal (c)</th>
-                    <th className="p-4 border-b border-poe-border text-right">Magic (c)</th>
+                    <th className="p-4 border-b border-poe-border text-right">Normal (Ex)</th>
+                    <th className="p-4 border-b border-poe-border text-right">Magic (Ex)</th>
                     <th className="p-4 border-b border-poe-border text-right">Gap</th>
                     <th className="p-4 border-b border-poe-border text-right">ROI</th>
                   </tr>
@@ -205,19 +254,98 @@ export const BatchAnalysis: React.FC = () => {
                     
                     const isPositive = row.gap_chaos > 0;
                     const isHighRoi = roi > 50;
+                    
+                    // Build trade URL for this base type
+                    // PoE trade: https://www.pathofexile.com/trade2/search/poe2/LEAGUE/SEARCH_ID
+                    const searchId = row.search_id || '';
+                    const magicSearchId = row.magic_search_id || '';
+                    const normalUrl = searchId
+                        ? `https://www.pathofexile.com/trade2/search/poe2/Fate%20of%20the%20Vaal/${searchId}`
+                        : `https://www.pathofexile.com/trade2/search/poe2/Fate%20of%20the%20Vaal`;
+                    const magicUrl = magicSearchId
+                        ? `https://www.pathofexile.com/trade2/search/poe2/Fate%20of%20the%20Vaal/${magicSearchId}`
+                        : normalUrl;
 
                     return (
-                      <tr key={idx} className="hover:bg-white/5 transition-colors">
-                        <td className="p-4 font-medium text-poe-highlight">{row.base_type}</td>
-                        <td className="p-4 text-right text-gray-400">{row.normal_avg_chaos.toFixed(1)}</td>
-                        <td className="p-4 text-right text-blue-300">{row.magic_avg_chaos.toFixed(1)}</td>
-                        <td className={`p-4 text-right font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                          {row.gap_chaos > 0 ? '+' : ''}{row.gap_chaos.toFixed(1)}
-                        </td>
-                        <td className={`p-4 text-right font-mono ${isHighRoi ? 'text-poe-gold' : 'text-gray-500'}`}>
-                          {roi.toFixed(0)}%
-                        </td>
-                      </tr>
+                      <React.Fragment key={idx}>
+                        <tr
+                          className="hover:bg-white/5 transition-colors cursor-pointer"
+                          onClick={() => toggleRow(idx)}
+                        >
+                          <td className="p-4 font-medium text-poe-highlight">
+                            <span className="mr-2">{expandedRows.has(idx) ? '▼' : '▶'}</span>
+                            {row.base_type}
+                          </td>
+                          <td className="p-4 text-right text-gray-400">
+                            <a
+                              href={normalUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-poe-gold hover:underline cursor-pointer"
+                              title="View Normal items on PoE Trade"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {row.normal_avg_chaos.toFixed(2)} Ex
+                            </a>
+                          </td>
+                          <td className="p-4 text-right text-blue-300">
+                            <a
+                              href={magicUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-poe-gold hover:underline cursor-pointer"
+                              title="View Magic items on PoE Trade"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {row.magic_avg_chaos.toFixed(2)} Ex
+                            </a>
+                          </td>
+                          <td className={`p-4 text-right font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                            {row.gap_chaos > 0 ? '+' : ''}{row.gap_chaos.toFixed(2)} Ex
+                          </td>
+                          <td className={`p-4 text-right font-mono ${isHighRoi ? 'text-poe-gold' : 'text-gray-500'}`}>
+                            {roi.toFixed(0)}%
+                          </td>
+                        </tr>
+                        {expandedRows.has(idx) && (
+                          <tr className="bg-black/30">
+                            <td colSpan={5} className="p-4">
+                              <div className="grid grid-cols-1 gap-6">
+                                {/* Magic Modifiers */}
+                                <div>
+                                  <h4 className="text-poe-gold text-xs font-bold uppercase mb-2">Magic Modifiers (T1)</h4>
+                                  <div className="max-h-48 overflow-y-auto custom-scrollbar">
+                                          {row.magic_modifiers && row.magic_modifiers.length > 0 ? (
+                                      <div className="space-y-1">
+                                        {row.magic_modifiers.map((mod, mIdx) => (
+                                          <div key={mIdx} className="flex items-center justify-between text-xs py-1 px-2 bg-poe-card/50 rounded">
+                                            <span className="text-gray-300">
+                                              <span className="text-poe-golddim mr-1">[{mod.tier}]</span>
+                                              {mod.display_text || mod.name}
+                                            </span>
+                                            <button
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                addExclusion(mod.name, mod.tier);
+                                              }}
+                                              className="text-red-400 hover:text-red-300 ml-2 px-2 py-0.5 rounded hover:bg-red-900/30"
+                                              title="Exclude this modifier"
+                                            >
+                                              ✕
+                                            </button>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <div className="text-gray-500 text-xs italic">No modifiers found</div>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </React.Fragment>
                     );
                   })}
                 </tbody>

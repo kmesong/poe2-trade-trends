@@ -5,6 +5,7 @@ import { Settings } from './pages/Settings';
 import { BatchAnalysis } from './pages/BatchAnalysis';
 import { Routes, Route } from 'react-router-dom';
 import type { Data, WeaponData } from './types';
+import { Toaster } from 'react-hot-toast';
 
 function App() {
 
@@ -72,6 +73,29 @@ function App() {
           <Route path="/batch-analysis" element={<BatchAnalysis />} />
         </Routes>
       </main>
+      <Toaster 
+        position="top-right"
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#1a1a2e',
+            color: '#e0e0e0',
+            border: '1px solid #4a4a6a',
+          },
+          success: {
+            iconTheme: {
+              primary: '#22c55e',
+              secondary: '#1a1a2e',
+            },
+          },
+          error: {
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#1a1a2e',
+            },
+          },
+        }}
+      />
     </div>
   );
 }

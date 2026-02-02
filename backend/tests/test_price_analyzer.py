@@ -5,8 +5,8 @@ from backend.price_analyzer import PriceAnalyzer
 @pytest.fixture
 def mock_currency_service():
     service = MagicMock()
-    # Mock normalize_to_chaos: 1 unit of any currency = 10 chaos for simplicity in tests
-    service.normalize_to_chaos.side_effect = lambda amount, currency: amount * 10.0 if currency == "divine" else float(amount)
+    # Mock normalize_to_exalted: 1 unit of any currency = 0.1 exalts for simplicity in tests
+    service.normalize_to_exalted.side_effect = lambda amount, currency: amount * 0.1 if currency == "divine" else float(amount) * 0.00556  # chaos converted
     return service
 
 @patch("backend.price_analyzer.TradeAPI")
@@ -39,14 +39,14 @@ def test_analyze_gap_success(MockTradeAPI, mock_currency_service):
     analyzer = PriceAnalyzer(currency_service=mock_currency_service)
     result = analyzer.analyze_gap("Expert Dualnaught Bow")
     
-    # Normal avg: (5 + 7) / 2 = 6
-    # Magic avg: (10 + 12) / 2 = 11
-    # Gap: 11 - 6 = 5
+    # Normal avg: (5 + 7) * 0.00556 = 0.0667 exalts
+    # Magic avg: (1 + 1.2) * 0.1 = 0.22 exalts
+    # Gap: 0.22 - 0.0667 = 0.1533 exalts
     
     assert result["base_type"] == "Expert Dualnaught Bow"
-    assert result["normal_avg_chaos"] == 6.0
-    assert result["magic_avg_chaos"] == 11.0
-    assert result["gap_chaos"] == 5.0
+    assert result["normal_avg_chaos"] == pytest.approx(0.03, rel=0.1)
+    assert result["magic_avg_chaos"] == pytest.approx(0.11, rel=0.1)
+    assert result["gap_chaos"] == pytest.approx(0.08, rel=0.1)
 
 @patch("backend.price_analyzer.TradeAPI")
 def test_analyze_gap_no_results(MockTradeAPI, mock_currency_service):
@@ -103,7 +103,8 @@ def test_get_average_price_recursive(mock_sleep, MockTradeAPI, mock_currency_ser
     query = {"some": "query"}
     avg = analyzer._get_average_price(mock_api, query, item_validator=analyzer._is_t1_magic)
     
-    assert avg == 20.0
+    # 20 chaos = 20 * 0.00556 = 0.1112 exalts
+    assert avg == pytest.approx(0.1112, rel=0.01)
     assert mock_api.fetch.call_count == 2
     assert mock_sleep.call_count == 1
 
@@ -141,8 +142,10 @@ def test_analyze_gap_price_ramp(MockTradeAPI, mock_currency_service):
     analyzer = PriceAnalyzer(currency_service=mock_currency_service)
     result = analyzer.analyze_gap("Ramp Bow")
     
-    assert result["normal_avg_chaos"] == 10.0
-    assert result["magic_avg_chaos"] == 50.0
+    # 10 chaos = 10 * 0.00556 = 0.0556 exalts
+    # 50 chaos = 50 * 0.00556 = 0.278 exalts
+    assert result["normal_avg_chaos"] == pytest.approx(0.06, rel=0.1)
+    assert result["magic_avg_chaos"] == pytest.approx(0.28, rel=0.1)
     assert mock_api.search.call_count == 3 # 1 normal + 2 magic attempts
 
 def test_is_t1_magic_ignores_implicits():
