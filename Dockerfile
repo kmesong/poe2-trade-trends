@@ -14,17 +14,20 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
+# Copy backend code FIRST (before installing dependencies to leverage cache)
+COPY backend/ .
+
 # Install backend dependencies
 COPY backend/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy backend code
-COPY backend/ .
-
 # Copy built frontend assets from Stage 1 to where Flask expects them
-# We configured Flask to look in ../poe2-trends/dist (relative to /app/server.py)
-# So we need to place them at /poe2-trends/dist
+# Flask static_folder is configured as '../poe2-trends/dist' relative to server.py
+# Since server.py is at /app/server.py, Flask looks in /poe2-trends/dist
 COPY --from=build-frontend /app/frontend/dist /poe2-trends/dist
+
+# Copy instance folder for database
+COPY --from=build-frontend /app/frontend/instance /app/instance
 
 # Expose port 5000
 EXPOSE 5000
@@ -32,6 +35,7 @@ EXPOSE 5000
 # Define environment variables
 ENV FLASK_APP=server.py
 ENV FLASK_RUN_HOST=0.0.0.0
+ENV PYTHONUNBUFFERED=1
 
 # Run Flask
-CMD ["flask", "run"]
+CMD ["gunicorn", "--bind", "0.0.0.0:5000", "server:app"]
