@@ -6,7 +6,7 @@ interface Props {
   data: Data | null;
   activeType: string;
   onSelect: (type: string) => void;
-  onDataRefresh?: (newData: any) => void;
+  onDataRefresh?: (newData: Data) => void;
 }
 
 interface SavedSearch {
@@ -53,9 +53,6 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
     setShowSaveInput(false);
     
     try {
-      // Validate JSON locally if possible
-      try { JSON.parse(queryInput); } catch (e) {}
-
       const response = await fetch('http://localhost:5000/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -71,8 +68,8 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
       if (onDataRefresh) {
         onDataRefresh(newData);
       }
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An unknown error occurred');
     } finally {
       setLoading(false);
     }

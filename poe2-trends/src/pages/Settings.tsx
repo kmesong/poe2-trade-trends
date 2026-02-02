@@ -1,15 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { getSessionId, saveSessionId } from '../utils/storage';
 
 export const Settings: React.FC = () => {
-  const [sessionId, setSessionId] = useState('');
+  const [sessionId, setSessionId] = useState(getSessionId() || '');
   const [isVisible, setIsVisible] = useState(false);
   const [status, setStatus] = useState<'idle' | 'saved' | 'cleared'>('idle');
-
-  useEffect(() => {
-    const stored = getSessionId();
-    if (stored) setSessionId(stored);
-  }, []);
 
   const handleSave = () => {
     saveSessionId(sessionId.trim());
