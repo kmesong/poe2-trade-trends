@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from dotenv import load_dotenv
 import requests
 import json
 import time
@@ -8,8 +9,15 @@ import os
 from collections import defaultdict
 import sys
 
+# Load environment variables
+load_dotenv()
+
+from backend.price_analyzer import PriceAnalyzer
+
 app = Flask(__name__, static_folder='../poe2-trends/dist', static_url_path='/')
 CORS(app)  # Enable CORS for all routes
+
+analyzer = PriceAnalyzer()
 
 # Serve React App
 @app.route('/')
@@ -29,6 +37,10 @@ def static_proxy(path):
 SEARCH_URL_BASE = "https://www.pathofexile.com/api/trade2/search/poe2/"
 FETCH_URL_BASE = "https://www.pathofexile.com/api/trade2/fetch/"
 HISTORY_DIR = "saved_data"
+
+def get_session_id():
+    """Extract session ID from header or environment."""
+    return request.headers.get("X-POESESSID") or os.getenv("POESESSID")
 
 if not os.path.exists(HISTORY_DIR):
     os.makedirs(HISTORY_DIR)
@@ -322,6 +334,29 @@ def analyze():
     except Exception as e:
         print(f"Error: {e}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/analyze/batch-price', methods=['POST'])
+def batch_price_analysis():
+    session_id = get_session_id()
+    if not session_id:
+        return jsonify({"error": "Session ID required (X-POESESSID header or POESESSID env)"}), 401
+    
+    data = request.json
+    if not data:
+        return jsonify({"error": "No JSON payload provided"}), 400
+        
+    bases = data.get("bases", [])
+    if not bases:
+        return jsonify({"error": "No bases provided"}), 400
+    
+    results = []
+    for base in bases:
+        print(f"Analyzing {base}...")
+        res = analyzer.analyze_gap(base, session_id)
+        results.append(res)
+        time.sleep(1) # Rate limit
+        
+    return jsonify(results)
 
 if __name__ == '__main__':
     print("Starting server on port 5000...")
