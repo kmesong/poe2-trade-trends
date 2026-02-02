@@ -1,3 +1,5 @@
+import time
+import copy
 from backend.trade_api import TradeAPI
 from backend.currency_service import CurrencyService
 
@@ -70,30 +72,57 @@ class PriceAnalyzer:
         
         return has_any_mod
 
-    def _get_average_price(self, api, query, item_validator=None):
+    def _get_average_price(self, api, query, item_validator=None, target_count=5, max_items_to_check=100, min_price_filter=None):
         try:
+            if min_price_filter is not None:
+                query = copy.deepcopy(query)
+                # Ensure the nested path filters.trade_filters.filters.price.min exists
+                if "filters" not in query:
+                    query["filters"] = {}
+                if "trade_filters" not in query["filters"]:
+                    query["filters"]["trade_filters"] = {}
+                if "filters" not in query["filters"]["trade_filters"]:
+                    query["filters"]["trade_filters"]["filters"] = {}
+                if "price" not in query["filters"]["trade_filters"]["filters"]:
+                    query["filters"]["trade_filters"]["filters"]["price"] = {}
+                query["filters"]["trade_filters"]["filters"]["price"]["min"] = min_price_filter
+
             search_results = api.search(query)
-            ids = search_results.get("result", [])[:10]  # Take top 10 for average
-            if not ids:
+            all_ids = search_results.get("result", [])[:100]  # Get up to 100 IDs
+            if not all_ids:
                 return 0.0
                 
-            fetch_results = api.fetch(ids, query_id=search_results.get("id"))
-            items = fetch_results.get("result", [])
-            
+            query_id = search_results.get("id")
             prices = []
-            for item in items:
-                if item_validator and not item_validator(item):
-                    continue
+            
+            # Process in batches of 10
+            for i in range(0, min(len(all_ids), max_items_to_check), 10):
+                if len(prices) >= target_count:
+                    break
                     
-                listing = item.get("listing", {})
-                price_info = listing.get("price", {})
-                amount = price_info.get("amount")
-                currency = price_info.get("currency")
+                batch_ids = all_ids[i:i+10]
+                fetch_results = api.fetch(batch_ids, query_id=query_id)
+                items = fetch_results.get("result", [])
                 
-                if amount is not None and currency:
-                    chaos_val = self.currency_service.normalize_to_chaos(amount, currency)
-                    if chaos_val > 0:
-                        prices.append(chaos_val)
+                for item in items:
+                    if item_validator and not item_validator(item):
+                        continue
+                        
+                    listing = item.get("listing", {})
+                    price_info = listing.get("price", {})
+                    amount = price_info.get("amount")
+                    currency = price_info.get("currency")
+                    
+                    if amount is not None and currency:
+                        chaos_val = self.currency_service.normalize_to_chaos(amount, currency)
+                        if chaos_val > 0:
+                            prices.append(chaos_val)
+                            if len(prices) >= target_count:
+                                break
+                
+                # Sleep between batches if more items are needed and available
+                if i + 10 < min(len(all_ids), max_items_to_check) and len(prices) < target_count:
+                    time.sleep(0.5)
             
             if not prices:
                 return 0.0
