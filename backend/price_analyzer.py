@@ -34,6 +34,11 @@ class PriceAnalyzer:
                     "filters": {
                         "rarity": {"option": "magic"}
                     }
+                },
+                "misc_filters": {
+                    "filters": {
+                        "ilvl": {"min": 81}
+                    }
                 }
             }
         }
