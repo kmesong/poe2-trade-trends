@@ -67,7 +67,14 @@ class PriceAnalyzer:
                 filtered_query["filters"]["trade_filters"]["filters"] = {}
             if "price" not in filtered_query["filters"]["trade_filters"]["filters"]:
                 filtered_query["filters"]["trade_filters"]["filters"]["price"] = {}
+            
+            # Explicitly set the min price and currency option
             filtered_query["filters"]["trade_filters"]["filters"]["price"]["min"] = current_min_price
+            filtered_query["filters"]["trade_filters"]["filters"]["price"]["option"] = "exalted"
+            
+            # Ensure max price is not set (unless we want to?)
+            if "max" in filtered_query["filters"]["trade_filters"]["filters"]["price"]:
+                del filtered_query["filters"]["trade_filters"]["filters"]["price"]["max"]
 
             magic_result = self._get_search_result(api, filtered_query)
             magic_search_id = magic_result.get("id") if magic_result else None

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { getSessionId, getBatchResults, saveBatchResults } from '../utils/storage';
+import { getSessionId } from '../utils/storage';
 import { Link } from 'react-router-dom';
 import type { BatchResult } from '../types';
 import toast from 'react-hot-toast';
@@ -7,18 +7,72 @@ import { ItemTree } from '../components/ItemTree';
 
 export const BatchAnalysis: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
-  const [results, setResults] = useState<BatchResult[]>(() => getBatchResults());
+  // allResults stores the full list of latest analyses from the DB
+  const [allResults, setAllResults] = useState<BatchResult[]>([]);
+  // displayedResults is what the user sees (filtered by selection)
+  const [displayedResults, setDisplayedResults] = useState<BatchResult[]>([]);
+  
   const [loading, setLoading] = useState(false);
+  const [isAnalysing, setIsAnalysing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [currentBase, setCurrentBase] = useState<string | null>(null);
   const [totalBases, setTotalBases] = useState(0);
+  const [processedCount, setProcessedCount] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
 
   const abortControllerRef = useRef<AbortController | null>(null);
 
+  // Initial load of latest data
   useEffect(() => {
-    saveBatchResults(results);
-  }, [results]);
+    loadLatestAnalyses();
+  }, []);
+
+  // Filter displayed results whenever selection or allResults changes
+  useEffect(() => {
+    if (selectedItems.length === 0) {
+      // If nothing selected, show everything (or could show nothing, but everything is better for "overview")
+      setDisplayedResults(allResults);
+    } else {
+      // Filter results to only show selected base types
+      const filtered = allResults.filter(r => selectedItems.includes(r.base_type));
+      setDisplayedResults(filtered);
+    }
+  }, [selectedItems, allResults]);
+
+  const loadLatestAnalyses = async () => {
+    try {
+      setLoading(true);
+      // Fetch latest only, high limit
+      // Note: We need to cast the response to BatchResult[] because the DB shape matches but isn't strictly typed the same in frontend yet
+      const response = await fetch('/api/db/analyses?latest_only=true&limit=500');
+      
+      if (!response.ok) {
+        throw new Error(`Failed to fetch history (${response.status})`);
+      }
+      
+      const text = await response.text();
+      try {
+        const data = JSON.parse(text);
+        if (data.success) {
+          setAllResults(data.data);
+        } else {
+          console.error('API returned success: false', data);
+        }
+      } catch (e) {
+        console.error('Failed to parse API response:', e, text.substring(0, 100));
+        throw new Error('Invalid API response format');
+      }
+      } catch (e) {
+        console.error('Failed to parse API response:', e, text.substring(0, 100));
+        throw new Error('Invalid API response format');
+      }
+    } catch (err) {
+      console.error('Failed to load history', err);
+      toast.error('Failed to load current data');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const toggleRow = (idx: number) => {
     const newExpanded = new Set(expandedRows);
@@ -66,16 +120,16 @@ export const BatchAnalysis: React.FC = () => {
 
     const bases = selectedItems;
     if (bases.length === 0) {
-      const msg = 'Please select at least one item base type.';
+      const msg = 'Please select at least one item base type to analyze/refresh.';
       setError(msg);
       toast.error(msg);
       return;
     }
 
-    setLoading(true);
+    setIsAnalysing(true);
     setError(null);
-    setResults([]);
     setTotalBases(bases.length);
+    setProcessedCount(0);
     setCurrentBase(null);
     
     abortControllerRef.current = new AbortController();
@@ -110,13 +164,28 @@ export const BatchAnalysis: React.FC = () => {
           } else {
             toast.error(errorMsg);
           }
-          throw new Error(errorMsg);
+          // Continue to next item even if one fails
+          setProcessedCount(prev => prev + 1);
+          continue; 
         }
 
         const data = await response.json();
         if (data && data.length > 0) {
-          setResults(prev => [...prev, data[0]]);
+          const newResult = data[0];
+          
+          // Update allResults: replace existing entry for this base, or add if new
+          setAllResults(prev => {
+            const index = prev.findIndex(r => r.base_type === newResult.base_type);
+            if (index >= 0) {
+              const updated = [...prev];
+              updated[index] = newResult;
+              return updated;
+            }
+            return [newResult, ...prev];
+          });
         }
+        
+        setProcessedCount(prev => prev + 1);
 
         if (i < bases.length - 1) {
           if (abortControllerRef.current?.signal.aborted) break;
@@ -133,7 +202,7 @@ export const BatchAnalysis: React.FC = () => {
         setError('An unexpected error occurred');
       }
     } finally {
-      setLoading(false);
+      setIsAnalysing(false);
       setCurrentBase(null);
       abortControllerRef.current = null;
     }
@@ -149,7 +218,7 @@ export const BatchAnalysis: React.FC = () => {
         
         <div className="flex-1 flex flex-col min-h-0">
           <label className="text-xs text-gray-400 uppercase font-bold mb-2">
-            Select Item Bases
+            Select Item Bases (Filter / Refresh)
           </label>
           <div className="flex-1 min-h-0 mb-4 overflow-hidden">
             <ItemTree
@@ -173,7 +242,7 @@ export const BatchAnalysis: React.FC = () => {
             </div>
           )}
 
-          {loading ? (
+          {isAnalysing ? (
             <button
               onClick={handleStop}
               className="w-full py-3 rounded text-sm font-bold uppercase tracking-widest transition-all shadow-lg bg-gray-800 hover:bg-gray-700 text-red-400 border border-poe-border"
@@ -183,9 +252,14 @@ export const BatchAnalysis: React.FC = () => {
           ) : (
             <button
               onClick={handleAnalyze}
-              className="w-full py-3 rounded text-sm font-bold uppercase tracking-widest transition-all shadow-lg bg-gradient-to-r from-poe-red/80 to-poe-red hover:from-red-600 hover:to-red-500 text-white border border-red-900"
+              disabled={selectedItems.length === 0}
+              className={`w-full py-3 rounded text-sm font-bold uppercase tracking-widest transition-all shadow-lg border ${
+                selectedItems.length === 0 
+                  ? 'bg-gray-800 text-gray-500 border-gray-700 cursor-not-allowed' 
+                  : 'bg-gradient-to-r from-poe-red/80 to-poe-red hover:from-red-600 hover:to-red-500 text-white border-red-900'
+              }`}
             >
-              Analyze Bases
+              {selectedItems.length > 0 ? `Analyze Selected (${selectedItems.length})` : 'Select items to analyze'}
             </button>
           )}
         </div>
@@ -198,12 +272,13 @@ export const BatchAnalysis: React.FC = () => {
             <h3 className="text-lg text-poe-highlight font-serif">Market Gap Analysis</h3>
             <div className="flex items-center gap-4">
               <div className="text-xs text-gray-500">
-                {results.length} Results Found
+                {displayedResults.length} Results Found
+                {selectedItems.length > 0 && ` (Filtered from ${allResults.length})`}
               </div>
             </div>
           </div>
 
-          {loading && (
+          {isAnalysing && (
             <div className="mb-8 p-4 bg-black/40 border border-poe-border/50 rounded-lg shadow-inner">
               <div className="flex justify-between items-end mb-3">
                 <div className="flex flex-col">
@@ -215,26 +290,28 @@ export const BatchAnalysis: React.FC = () => {
                 <div className="text-right">
                   <span className="text-[10px] text-gray-500 uppercase font-bold tracking-[0.2em] mb-1 block">Progress</span>
                   <span className="text-sm font-mono text-poe-highlight">
-                    {results.length} <span className="text-gray-600">/</span> {totalBases}
+                    {processedCount} <span className="text-gray-600">/</span> {totalBases}
                   </span>
                 </div>
               </div>
               <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-poe-border/20 p-[1px]">
                 <div 
                   className="h-full bg-gradient-to-r from-poe-gold/40 via-poe-gold to-poe-golddim rounded-full shadow-[0_0_12px_rgba(233,176,79,0.3)] transition-all duration-700 ease-out"
-                  style={{ width: `${Math.min(100, (results.length / totalBases) * 100)}%` }}
+                  style={{ width: `${Math.min(100, (processedCount / totalBases) * 100)}%` }}
                 />
               </div>
             </div>
           )}
 
-          {results.length === 0 && !loading && (
+          {displayedResults.length === 0 && !loading && !isAnalysing && (
             <div className="text-center py-20 text-gray-600 italic">
-              Select item bases on the left to analyze profit gaps.
+              {selectedItems.length > 0 
+                ? "No previous data for selected items. Click 'Analyze Selected' to fetch data." 
+                : "Select items on the left to filter results."}
             </div>
           )}
 
-          {results.length > 0 && (
+          {displayedResults.length > 0 && (
             <div className="border border-poe-border rounded overflow-hidden shadow-2xl">
               <table className="w-full text-left text-sm">
                 <thead className="bg-black/60 text-poe-golddim uppercase text-xs tracking-wider font-bold">
@@ -247,7 +324,7 @@ export const BatchAnalysis: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-poe-border/30 bg-poe-card/30">
-                  {results.map((row, idx) => {
+                  {displayedResults.map((row, idx) => {
                     const roi = row.normal_avg_chaos > 0 
                       ? ((row.gap_chaos / row.normal_avg_chaos) * 100) 
                       : 0;

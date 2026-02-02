@@ -1,0 +1,3 @@
+- When encountering multiple unstaged changes that were not explicitly part of the current task, it's best to analyze them and commit them as separate atomic units if they represent logical features or fixes, following the repository's commit style.
+Implemented persistence for BatchAnalysis using localStorage. Moved BatchResult interface to src/types.ts for shared usage and to satisfy lint rules.
+### Frontend Cancellation & Progress\n- Implemented AbortController for fetch requests in a loop.\n- Used a useRef to persist the controller across renders during the async loop.\n- Added a progress bar with Tailwind CSS using a gold gradient for PoE2 aesthetic.\n- Handled AbortError gracefully to avoid showing error messages when user stops analysis.

@@ -53,7 +53,9 @@ class TradeAPI:
         raise Exception("Request failed after maximum retries")
 
     def search(self, query, league="Fate of the Vaal"):
-        url = f"{self.SEARCH_URL_BASE}{league}"
+        import urllib.parse
+        encoded_league = urllib.parse.quote(league)
+        url = f"{self.SEARCH_URL_BASE}{encoded_league}"
         payload = {
             "query": query,
             "sort": {"price": "asc"}

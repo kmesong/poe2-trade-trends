@@ -243,6 +243,34 @@ def get_analyses(base_type: str = None, limit: int = 100) -> list:
     return query.order_by(AnalysisResult.created_at.desc()).limit(limit).all()
 
 
+def get_latest_analyses(limit: int = 100) -> list:
+    """
+    Get the LATEST analysis result for each base_type.
+    This gives a snapshot of the current state for all tracked items.
+    
+    Args:
+        limit: Maximum number of results to return (per base_type limit is 1)
+        
+    Returns:
+        list: AnalysisResult objects (latest per base_type)
+    """
+    # Subquery to find the max ID for each base_type
+    subquery = db.session.query(
+        db.func.max(AnalysisResult.id).label('max_id')
+    ).group_by(AnalysisResult.base_type).subquery()
+    
+    # Join with the main table to get full records
+    query = AnalysisResult.query.join(
+        subquery,
+        AnalysisResult.id == subquery.c.max_id
+    ).order_by(AnalysisResult.created_at.desc())
+    
+    if limit:
+        query = query.limit(limit)
+        
+    return query.all()
+
+
 def add_excluded_mod(name_pattern: str = None, tier: str = None,
                      mod_type: str = None, reason: str = None) -> ExcludedModifier:
     """

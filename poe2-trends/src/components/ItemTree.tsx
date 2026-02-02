@@ -1,4 +1,20 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+
+interface IndeterminateCheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
+  indeterminate?: boolean;
+}
+
+const IndeterminateCheckbox: React.FC<IndeterminateCheckboxProps> = ({ indeterminate, ...props }) => {
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.indeterminate = !!indeterminate;
+    }
+  }, [indeterminate]);
+
+  return <input ref={ref} type="checkbox" {...props} />;
+};
 
 interface ItemEntry {
   id: string;
@@ -67,12 +83,12 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
             const entries = cat.entries;
 
             if (Array.isArray(entries)) {
-              entries.forEach((entry: unknown) => {
+              entries.forEach((entry: unknown, index) => {
                 if (entry && typeof entry === 'object') {
                   const e = entry as { type?: string };
                   if (e.type) {
                     result.push({
-                      id: e.type,
+                      id: `${categoryName}-${e.type}-${index}`, 
                       name: e.type,
                       category: categoryName
                     });
@@ -245,12 +261,11 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
                 <span className="text-poe-golddim text-sm">
                   {isExpanded ? '▼' : '▶'}
                 </span>
-                <input
-                  type="checkbox"
+                <IndeterminateCheckbox
                   checked={allSelected}
                   indeterminate={someSelected && !allSelected}
                   onChange={() => toggleCategoryAll(category, categoryItems)}
-                  onClick={(e) => e.stopPropagation()}
+                  onClick={(e: React.MouseEvent) => e.stopPropagation()}
                   className="accent-poe-gold"
                 />
                 <span className="text-poe-highlight font-medium flex-1 text-left">

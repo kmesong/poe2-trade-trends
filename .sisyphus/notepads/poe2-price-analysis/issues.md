@@ -1,0 +1,1 @@
+- Found a routing bug in `poe2-trends/src/main.tsx`: the root route was defined as `/` instead of `/*`, which prevented nested routes in `App.tsx` (like `/settings` and `/batch-analysis`) from matching. Temporarily fixed it for E2E verification but reverted since I shouldn't commit changes.

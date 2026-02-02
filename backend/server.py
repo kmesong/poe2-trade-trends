@@ -487,13 +487,19 @@ def get_analyses():
     Query params:
         - base_type: Filter by item type
         - limit: Maximum results (default 100)
+        - latest_only: If true, returns only the latest analysis per base_type
     """
     try:
         base_type = request.args.get('base_type')
         limit = int(request.args.get('limit', 100))
+        latest_only = request.args.get('latest_only', 'false').lower() == 'true'
 
-        from backend.database import get_analyses
-        analyses = get_analyses(base_type=base_type, limit=limit)
+        from backend.database import get_analyses, get_latest_analyses
+        
+        if latest_only and not base_type:
+            analyses = get_latest_analyses(limit=limit)
+        else:
+            analyses = get_analyses(base_type=base_type, limit=limit)
 
         return jsonify({
             'success': True,
