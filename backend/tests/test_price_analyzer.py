@@ -30,8 +30,8 @@ def test_analyze_gap_success(MockTradeAPI, mock_currency_service):
         },
         {
             "result": [
-                {"listing": {"price": {"amount": 1, "currency": "divine"}}}, # 10 chaos
-                {"listing": {"price": {"amount": 1.2, "currency": "divine"}}} # 12 chaos
+                {"listing": {"price": {"amount": 1, "currency": "divine"}}, "extended": {"mods": {"explicit": [{"tier": "P1"}]}}}, # 10 chaos
+                {"listing": {"price": {"amount": 1.2, "currency": "divine"}}, "extended": {"mods": {"explicit": [{"tier": "S1"}]}}} # 12 chaos
             ]
         }
     ]

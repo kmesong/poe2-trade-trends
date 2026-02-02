@@ -37,7 +37,7 @@ class PriceAnalyzer:
                 }
             }
         }
-        magic_avg = self._get_average_price(api, magic_query)
+        magic_avg = self._get_average_price(api, magic_query, item_validator=self._is_t1_magic)
         
         return {
             "base_type": base_type,
@@ -46,7 +46,20 @@ class PriceAnalyzer:
             "gap_chaos": round(magic_avg - normal_avg, 2)
         }
 
-    def _get_average_price(self, api, query):
+    def _is_t1_magic(self, item):
+        """
+        Validator to check if a magic item has at least one Tier 1 (P1 or S1) modifier.
+        """
+        mods = item.get("extended", {}).get("mods", {})
+        for mod_group in mods.values():
+            if isinstance(mod_group, list):
+                for mod in mod_group:
+                    tier = mod.get("tier", "")
+                    if tier and (tier.startswith("P1") or tier.startswith("S1")):
+                        return True
+        return False
+
+    def _get_average_price(self, api, query, item_validator=None):
         try:
             search_results = api.search(query)
             ids = search_results.get("result", [])[:10]  # Take top 10 for average
@@ -58,6 +71,9 @@ class PriceAnalyzer:
             
             prices = []
             for item in items:
+                if item_validator and not item_validator(item):
+                    continue
+                    
                 listing = item.get("listing", {})
                 price_info = listing.get("price", {})
                 amount = price_info.get("amount")
