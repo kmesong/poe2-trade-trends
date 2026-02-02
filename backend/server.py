@@ -30,6 +30,10 @@ os.makedirs('instance', exist_ok=True)
 # Database configuration
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///poe2_trade.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Initialize database and create tables
+init_db(app)
+db.create_all()
 @app.route('/')
 def index():
     try:
