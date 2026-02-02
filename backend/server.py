@@ -33,23 +33,9 @@ def index():
 
 @app.route('/<path:path>')
 def static_proxy(path):
-    # send_static_file will guess the correct MIME type
     try:
         return app.send_static_file(path)
     except Exception:
-        # If file not found, fall back to index.html for client-side routing
-        try:
-            return app.send_static_file('index.html')
-        except Exception as e:
-            return f"Static file error: {e}", 404
-
-@app.route('/<path:path>')
-def static_proxy(path):
-    # send_static_file will guess the correct MIME type
-    try:
-        return app.send_static_file(path)
-    except Exception:
-        # If file not found, fall back to index.html for client-side routing
         return app.send_static_file('index.html')
 
 # Configuration
