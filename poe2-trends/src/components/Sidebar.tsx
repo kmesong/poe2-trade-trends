@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import type { Data } from '../types';
 
 interface Props {
@@ -24,6 +24,9 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
   const [savedSearches, setSavedSearches] = useState<SavedSearch[]>([]);
   const [saveName, setSaveName] = useState('');
   const [showSaveInput, setShowSaveInput] = useState(false);
+
+  const location = useLocation();
+  const isDashboard = location.pathname === '/';
 
   const types = data ? Object.keys(data).sort() : [];
 
@@ -116,12 +119,12 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
 
   return (
     <div className="w-64 bg-poe-card border-r border-poe-border h-screen flex flex-col fixed left-0 top-0">
-      <div className="p-6 border-b border-poe-border bg-gradient-to-b from-poe-card to-black shrink-0">
+      <Link to="/" className="p-6 border-b border-poe-border bg-gradient-to-b from-poe-card to-black shrink-0 block hover:bg-white/5 transition-colors">
         <h1 className="font-serif text-2xl text-poe-gold font-bold tracking-wider">
           POE2 <span className="text-poe-red">META</span>
         </h1>
         <p className="text-xs text-gray-500 mt-1 uppercase tracking-widest">Mirror Tier Stats</p>
-      </div>
+      </Link>
       
       <div className="p-4 border-b border-poe-border bg-black/20 shrink-0">
         <label className="text-[10px] text-gray-400 uppercase font-bold mb-2 block">
@@ -212,35 +215,57 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
             </div>
         )}
 
-        <div className="py-4">
+        <div className="py-2">
+           <h3 className="px-6 py-2 text-[10px] uppercase font-bold text-gray-500 tracking-wider">Item Classes</h3>
           {types.length === 0 ? (
              <p className="text-gray-500 text-xs px-6">No data loaded.</p>
           ) : (
               types.map(type => (
-                <button
+                <Link
                   key={type}
+                  to="/"
                   onClick={() => onSelect(type)}
-                  className={`w-full text-left px-6 py-3 text-sm transition-all relative
-                    ${activeType === type 
+                  className={`w-full block text-left px-6 py-3 text-sm transition-all relative
+                    ${isDashboard && activeType === type 
                       ? 'text-poe-highlight bg-white/5 border-l-2 border-poe-gold' 
                       : 'text-gray-400 hover:text-gray-200 hover:bg-white/5 border-l-2 border-transparent'
                     }`}
                 >
                   {type}
-                </button>
+                </Link>
               ))
           )}
         </div>
       </div>
       
-      <div className="p-4 border-t border-poe-border text-xs text-gray-600 text-center flex flex-col gap-2 shrink-0 bg-poe-card">
-        <Link 
-          to="/tablet-modifiers" 
-          className="text-poe-gold hover:text-poe-highlight transition-colors underline"
-        >
-          📜 Tablet Crafting Guide
-        </Link>
-        <span>Data from Trade Site</span>
+      {/* Tools & Links Footer */}
+      <div className="p-0 border-t border-poe-border bg-poe-card shrink-0 flex flex-col">
+        <div className="flex flex-col">
+            <Link 
+                to="/batch-analysis" 
+                className={`px-6 py-3 text-sm flex items-center gap-2 border-b border-poe-border/30 transition-colors
+                  ${location.pathname === '/batch-analysis' ? 'text-poe-gold bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+            >
+                <span>📊</span> Batch Analysis
+            </Link>
+            <Link 
+                to="/settings" 
+                className={`px-6 py-3 text-sm flex items-center gap-2 border-b border-poe-border/30 transition-colors
+                  ${location.pathname === '/settings' ? 'text-poe-gold bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+            >
+                <span>⚙️</span> Settings
+            </Link>
+        </div>
+
+        <div className="p-4 text-xs text-gray-600 text-center flex flex-col gap-2">
+          <Link 
+            to="/tablet-modifiers" 
+            className="text-poe-gold hover:text-poe-highlight transition-colors underline"
+          >
+            📜 Tablet Crafting Guide
+          </Link>
+          <span>Data from Trade Site</span>
+        </div>
       </div>
     </div>
   );
