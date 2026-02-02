@@ -21,7 +21,7 @@ from backend.database import (
     save_analysis, get_excluded_mods
 )
 
-app = Flask(__name__, static_folder='poe2-trends/dist', static_url_path='/')
+app = Flask(__name__, static_folder='../../poe2-trends/dist', static_url_path='/')
 
 # Serve React App
 @app.route('/')
