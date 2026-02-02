@@ -84,16 +84,22 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
             const entries = cat.entries;
 
             if (Array.isArray(entries)) {
+              const seenNames = new Set<string>();
+              
               entries.forEach((entry: unknown, index) => {
                 if (entry && typeof entry === 'object') {
                   const e = entry as { type?: string };
-                  if (e.type) {
+                  if (e.type && !seenNames.has(e.type)) {
+                    seenNames.add(e.type);
                     result.push({
-                      id: `${categoryName}-${e.type}-${index}`, 
-                      name: e.type,
+                      id: `${categoryName}-${e.type}-${index}`, // Unique ID for React Key (internal use only)
+                      name: e.type, // Real Item Name (what we send to API)
                       category: categoryName
                     });
                   }
+                }
+              });
+            }
                 }
               });
             }
