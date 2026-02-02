@@ -21,20 +21,27 @@ from backend.database import (
     save_analysis, get_excluded_mods
 )
 
-app = Flask(__name__, static_folder='../poe2-trends/dist', static_url_path='/')
-CORS(app)  # Enable CORS for all routes
-
-# Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///poe2_trade.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-init_db(app)
-
-analyzer = PriceAnalyzer()
+app = Flask(__name__, static_folder='poe2-trends/dist', static_url_path='/')
 
 # Serve React App
 @app.route('/')
 def index():
-    return app.send_static_file('index.html')
+    try:
+        return app.send_static_file('index.html')
+    except Exception as e:
+        return f"Error: {e}", 500
+
+@app.route('/<path:path>')
+def static_proxy(path):
+    # send_static_file will guess the correct MIME type
+    try:
+        return app.send_static_file(path)
+    except Exception:
+        # If file not found, fall back to index.html for client-side routing
+        try:
+            return app.send_static_file('index.html')
+        except Exception as e:
+            return f"Static file error: {e}", 404
 
 @app.route('/<path:path>')
 def static_proxy(path):
