@@ -27,4 +27,5 @@ ENV FLASK_APP=server.py
 ENV FLASK_RUN_HOST=0.0.0.0
 ENV PYTHONUNBUFFERED=1
 
+ENV PYTHONPATH=/app
 CMD ["gunicorn", "--bind", "0.0.0.0:5000", "server:app"]
