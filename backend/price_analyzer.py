@@ -54,10 +54,6 @@ class PriceAnalyzer:
         normal_craft_result = self._get_search_result(api, normal_craft_query)
         normal_craft_avg, _ = self._calculate_average_from_result(api, normal_craft_result, exclusions=exclusions)
         
-        # Use the filtered normal price as the base for calculations
-        # This represents the price of usable crafting bases
-        normal_avg = normal_craft_avg
-        
         # 3. Search Magic
         magic_query = {
             "status": {"option": "securable"},
@@ -134,8 +130,9 @@ class PriceAnalyzer:
         return {
             "base_type": base_type,
             "normal_avg_chaos": round(normal_avg, 2),
+            "crafting_avg_chaos": round(normal_craft_avg, 2),
             "magic_avg_chaos": round(magic_avg, 2),
-            "gap_chaos": round(magic_avg - normal_avg, 2),
+            "gap_chaos": round(magic_avg - normal_craft_avg, 2),
             "search_id": search_id,
             "magic_search_id": magic_search_id,
             "normal_modifiers": normal_mods,
