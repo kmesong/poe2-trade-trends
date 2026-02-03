@@ -5,7 +5,8 @@ Uses MongoDB with MongoEngine for flexible document storage.
 from datetime import datetime
 from mongoengine import (
     connect, Document, EmbeddedDocument, StringField, FloatField, 
-    DateTimeField, ListField, EmbeddedDocumentField, BooleanField
+    DateTimeField, ListField, EmbeddedDocumentField, BooleanField,
+    DictField
 )
 import json
 
@@ -169,6 +170,34 @@ class ExcludedModifier(Document):
                 return False
 
         return True
+
+
+class SearchHistory(Document):
+    """
+    Stores generic search history and analysis results.
+    Replaces the local JSON file storage.
+    """
+    name = StringField(required=True)
+    query = DictField()
+    results = DictField()
+    created_at = DateTimeField(default=datetime.utcnow)
+
+    meta = {
+        'indexes': [
+            '-created_at',
+            'name'
+        ]
+    }
+
+    def to_dict(self):
+        return {
+            'id': str(self.id),
+            'name': self.name,
+            'query': self.query,
+            'results': self.results,
+            'created_at': self.created_at.isoformat(),
+            'timestamp': int(self.created_at.timestamp())
+        }
 
 
 class CustomCategory(Document):
