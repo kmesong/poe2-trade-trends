@@ -129,10 +129,10 @@ class PriceAnalyzer:
         
         return {
             "base_type": base_type,
-            "normal_avg_chaos": round(normal_avg, 2),
-            "crafting_avg_chaos": round(normal_craft_avg, 2),
-            "magic_avg_chaos": round(magic_avg, 2),
-            "gap_chaos": round(magic_avg - normal_craft_avg, 2),
+            "normal_avg_ex": round(normal_avg, 2),
+            "crafting_avg_ex": round(normal_craft_avg, 2),
+            "magic_avg_ex": round(magic_avg, 2),
+            "gap_ex": round(magic_avg - normal_craft_avg, 2),
             "search_id": search_id,
             "magic_search_id": magic_search_id,
             "normal_modifiers": normal_mods,

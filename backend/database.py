@@ -27,7 +27,7 @@ class Modifier(EmbeddedDocument):
     display_text = StringField() # The full text from the item
 
     # Price data (if available)
-    price_chaos = FloatField()
+    price_ex = FloatField()
 
     # Magnitude values (min/max for the mod)
     magnitude_min = FloatField()
@@ -45,7 +45,7 @@ class Modifier(EmbeddedDocument):
             'rarity': self.rarity,
             'item_name': self.item_name,
             'display_text': self.display_text,
-            'price_chaos': self.price_chaos,
+            'price_ex': self.price_ex,
             'magnitude_min': self.magnitude_min,
             'magnitude_max': self.magnitude_max,
             'mod_group': self.mod_group
@@ -61,10 +61,10 @@ class AnalysisResult(Document):
     created_at = DateTimeField(default=datetime.utcnow)
 
     # Price data
-    normal_avg_chaos = FloatField(required=True)
-    crafting_avg_chaos = FloatField(default=0.0)
-    magic_avg_chaos = FloatField(required=True)
-    gap_chaos = FloatField(required=True)
+    normal_avg_ex = FloatField(required=True)
+    crafting_avg_ex = FloatField(default=0.0)
+    magic_avg_ex = FloatField(required=True)
+    gap_ex = FloatField(required=True)
 
     # Search IDs for trade links
     search_id = StringField()
@@ -90,10 +90,10 @@ class AnalysisResult(Document):
             'id': str(self.id),
             'base_type': self.base_type,
             'created_at': self.created_at.isoformat(),
-            'normal_avg_chaos': self.normal_avg_chaos,
-            'crafting_avg_chaos': self.crafting_avg_chaos,
-            'magic_avg_chaos': self.magic_avg_chaos,
-            'gap_chaos': self.gap_chaos,
+            'normal_avg_ex': self.normal_avg_ex,
+            'crafting_avg_ex': self.crafting_avg_ex,
+            'magic_avg_ex': self.magic_avg_ex,
+            'gap_ex': self.gap_ex,
             'search_id': self.search_id,
             'magic_search_id': self.magic_search_id,
             'modifiers': all_mods,
@@ -307,10 +307,10 @@ def save_analysis(analyzer, base_type: str, session_id: str = None,
     # Create and save the analysis document
     analysis = AnalysisResult(
         base_type=base_type,
-        normal_avg_chaos=result['normal_avg_chaos'],
-        crafting_avg_chaos=result.get('crafting_avg_chaos', 0.0),
-        magic_avg_chaos=result['magic_avg_chaos'],
-        gap_chaos=result['gap_chaos'],
+        normal_avg_ex=result['normal_avg_ex'],
+        crafting_avg_ex=result.get('crafting_avg_ex', 0.0),
+        magic_avg_ex=result['magic_avg_ex'],
+        gap_ex=result['gap_ex'],
         search_id=result.get('search_id'),
         magic_search_id=result.get('magic_search_id'),
         modifiers=modifiers
