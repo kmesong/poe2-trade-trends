@@ -5,7 +5,5 @@ services:
     build: .
     ports:
       - "5000:5000"
-    volumes:
-      - ./saved_data:/app/saved_data
     environment:
       - FLASK_ENV=production
