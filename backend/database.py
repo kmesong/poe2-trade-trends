@@ -19,6 +19,7 @@ class AnalysisResult(db.Model):
 
     # Price data
     normal_avg_chaos = db.Column(db.Float, nullable=False)
+    crafting_avg_chaos = db.Column(db.Float, default=0.0)
     magic_avg_chaos = db.Column(db.Float, nullable=False)
     gap_chaos = db.Column(db.Float, nullable=False)
 
@@ -41,6 +42,7 @@ class AnalysisResult(db.Model):
             'base_type': self.base_type,
             'created_at': self.created_at.isoformat(),
             'normal_avg_chaos': self.normal_avg_chaos,
+            'crafting_avg_chaos': self.crafting_avg_chaos,
             'magic_avg_chaos': self.magic_avg_chaos,
             'gap_chaos': self.gap_chaos,
             'search_id': self.search_id,
@@ -192,6 +194,7 @@ def save_analysis(analyzer, base_type: str, session_id: str = None,
     analysis = AnalysisResult(
         base_type=base_type,
         normal_avg_chaos=result['normal_avg_chaos'],
+        crafting_avg_chaos=result.get('crafting_avg_chaos', 0.0),
         magic_avg_chaos=result['magic_avg_chaos'],
         gap_chaos=result['gap_chaos'],
         search_id=result.get('search_id'),
