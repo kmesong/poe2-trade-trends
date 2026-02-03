@@ -361,6 +361,7 @@ export const BatchAnalysis: React.FC = () => {
                   <tr>
                     <th className="p-4 border-b border-poe-border">Base Type</th>
                     <th className="p-4 border-b border-poe-border text-right">Normal (Ex)</th>
+                    <th className="p-4 border-b border-poe-border text-right" title="ilvl 82+, Min 2 Rune Sockets">Crafting (Ex)</th>
                     <th className="p-4 border-b border-poe-border text-right">Magic (Ex)</th>
                     <th className="p-4 border-b border-poe-border text-right">Gap</th>
                     <th className="p-4 border-b border-poe-border text-right">ROI</th>
@@ -369,6 +370,7 @@ export const BatchAnalysis: React.FC = () => {
                 <tbody className="divide-y divide-poe-border/30 bg-poe-card/30">
                   {displayedResults.map((row, idx) => {
                     const normalPrice = row.normal_avg_chaos || 0;
+                    const craftingPrice = row.crafting_avg_chaos || 0;
                     const magicPrice = row.magic_avg_chaos || 0;
                     const gap = row.gap_chaos || 0;
                     
@@ -412,6 +414,9 @@ export const BatchAnalysis: React.FC = () => {
                               {normalPrice.toFixed(2)} Ex
                             </a>
                           </td>
+                          <td className="p-4 text-right text-gray-400" title="ilvl 82+, Min 2 Rune Sockets">
+                            {craftingPrice.toFixed(2)} Ex
+                          </td>
                           <td className="p-4 text-right text-blue-300">
                             <a
                               href={magicUrl}
@@ -433,7 +438,7 @@ export const BatchAnalysis: React.FC = () => {
                         </tr>
                         {expandedRows.has(idx) && (
                           <tr className="bg-black/30">
-                            <td colSpan={5} className="p-4">
+                            <td colSpan={6} className="p-4">
                               <div className="grid grid-cols-1 gap-6">
                                 {/* Magic Modifiers */}
                                 <div>

@@ -35,6 +35,7 @@ export interface ModifierData {
 export interface BatchResult {
   base_type: string;
   normal_avg_chaos: number;
+  crafting_avg_chaos?: number;
   magic_avg_chaos: number;
   gap_chaos: number;
   search_id?: string;
