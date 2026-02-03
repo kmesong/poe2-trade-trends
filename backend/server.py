@@ -15,6 +15,15 @@ from collections import defaultdict
 # Load environment variables
 load_dotenv()
 
+# Debug logging
+print("Environment loaded.")
+uri = os.getenv('MONGODB_URI')
+if uri:
+    masked = uri.split('@')[-1] if '@' in uri else '***'
+    print(f"Found MONGODB_URI: ...@{masked}")
+else:
+    print("No MONGODB_URI found in environment, using default localhost.")
+
 from backend.price_analyzer import PriceAnalyzer
 from backend.database import (
     init_db, AnalysisResult, Modifier, ExcludedModifier, CustomCategory,

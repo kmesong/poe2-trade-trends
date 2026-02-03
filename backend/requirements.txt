@@ -4,3 +4,4 @@ requests
 python-dotenv
 mongoengine
 gunicorn
+dnspython
