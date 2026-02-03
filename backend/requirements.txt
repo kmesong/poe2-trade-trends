@@ -6,4 +6,5 @@ flask-sqlalchemy
 sqlalchemy
 gunicorn
 sqlalchemy-libsql
-libsql-client
+libsql-client>=0.4.0
+>=0.4.0

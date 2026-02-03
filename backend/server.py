@@ -28,13 +28,15 @@ CORS(app)
 os.makedirs('instance', exist_ok=True)
 
 # Database configuration
-db_url = os.getenv('DATABASE_URL')
+db_url = os.getenv('DATABASE_URL', '').strip().rstrip('/')
 if db_url:
     # Fix protocols for SQLAlchemy compatibility
     if db_url.startswith('postgres://'):
         db_url = db_url.replace('postgres://', 'postgresql://', 1)
     elif db_url.startswith('libsql://'):
-        db_url = db_url.replace('libsql://', 'sqlite+libsql://', 1)
+        db_url = db_url.replace('libsql://', 'sqlite+wss://', 1)
+    elif db_url.startswith('https://'):
+        db_url = db_url.replace('https://', 'sqlite+wss://', 1)
 else:
     db_url = 'sqlite:///poe2_trade.db'
 
