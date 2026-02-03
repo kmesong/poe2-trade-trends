@@ -1,4 +1,11 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import toast from 'react-hot-toast';
+
+interface CustomCategory {
+  id: number;
+  name: string;
+  items: string[];
+}
 
 interface IndeterminateCheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   indeterminate?: boolean;
@@ -37,11 +44,111 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  
+  const [customCategories, setCustomCategories] = useState<CustomCategory[]>([]);
+  const [isCreatingGroup, setIsCreatingGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState('');
 
   useEffect(() => {
     fetchItems();
+    fetchCustomCategories();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const fetchCustomCategories = async () => {
+    try {
+      const response = await fetch('/api/db/custom-categories');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setCustomCategories(data.data);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to fetch custom categories:', error);
+    }
+  };
+
+  const createCustomGroup = async () => {
+    if (!newGroupName.trim()) {
+      toast.error('Please enter a group name');
+      return;
+    }
+    
+    const selectedNames = new Set<string>();
+    selectedItems.forEach(id => {
+      const item = items.find(i => i.id === id);
+      if (item) selectedNames.add(item.name);
+    });
+
+    if (selectedNames.size === 0) {
+      toast.error('Select items first to create a group');
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/db/custom-categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newGroupName,
+          items: Array.from(selectedNames)
+        })
+      });
+
+      if (response.ok) {
+        toast.success('Group created!');
+        setNewGroupName('');
+        setIsCreatingGroup(false);
+        fetchCustomCategories();
+      } else {
+        const data = await response.json();
+        toast.error(data.error || 'Failed to create group');
+      }
+    } catch (e) {
+      toast.error('Failed to create group');
+    }
+  };
+
+  const deleteCustomGroup = async (id: number, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Delete this custom group?')) return;
+
+    try {
+      const response = await fetch(`/api/db/custom-categories/${id}`, {
+        method: 'DELETE'
+      });
+
+      if (response.ok) {
+        toast.success('Group deleted');
+        fetchCustomCategories();
+      } else {
+        toast.error('Failed to delete group');
+      }
+    } catch (e) {
+      toast.error('Failed to delete group');
+    }
+  };
+
+  const toggleCustomGroup = (group: CustomCategory) => {
+    const groupItemIds = items
+      .filter(item => group.items.includes(item.name))
+      .map(item => item.id);
+      
+    if (groupItemIds.length === 0) return;
+
+    const allSelected = groupItemIds.every(id => selectedItems.has(id));
+    const newSelected = new Set(selectedItems);
+
+    if (allSelected) {
+      groupItemIds.forEach(id => newSelected.delete(id));
+    } else {
+      groupItemIds.forEach(id => newSelected.add(id));
+    }
+
+    setSelectedItems(newSelected);
+    notifySelection(newSelected);
+  };
 
   const fetchItems = async () => {
     try {
@@ -260,10 +367,88 @@ export const ItemTree: React.FC<ItemTreeProps> = ({ onSelectionChange }) => {
           onChange={(e) => setSearchTerm(e.target.value)}
           className="w-full bg-black/40 border border-poe-border rounded p-2 text-sm text-poe-highlight focus:border-poe-gold focus:outline-none"
         />
+
+        <div className="mt-2 pt-2 border-t border-poe-border/30">
+          {!isCreatingGroup ? (
+            <button
+              onClick={() => setIsCreatingGroup(true)}
+              className="text-xs text-poe-gold hover:underline flex items-center gap-1"
+            >
+              <span>+</span> Save Selection as Group
+            </button>
+          ) : (
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                placeholder="Group Name"
+                value={newGroupName}
+                onChange={(e) => setNewGroupName(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && createCustomGroup()}
+                className="flex-1 bg-black/40 border border-poe-border rounded px-2 py-1 text-xs text-poe-highlight focus:border-poe-gold focus:outline-none"
+                autoFocus
+              />
+              <button
+                onClick={createCustomGroup}
+                className="text-xs bg-poe-gold/20 hover:bg-poe-gold/40 text-poe-gold px-2 py-1 rounded border border-poe-gold/50"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => setIsCreatingGroup(false)}
+                className="text-xs text-gray-400 hover:text-gray-300"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Tree */}
       <div className="max-h-96 overflow-y-auto">
+        {customCategories.length > 0 && !searchTerm && (
+          <div className="border-b border-poe-border/30 bg-poe-card/20">
+             <div className="px-4 py-2 flex items-center gap-2">
+                <span className="text-poe-golddim text-sm font-bold">Custom Groups</span>
+             </div>
+             <div className="bg-black/10 pb-2">
+               {customCategories.map(group => {
+                 const groupItemIds = items
+                   .filter(item => group.items.includes(item.name))
+                   .map(item => item.id);
+                 
+                 const allSelected = groupItemIds.length > 0 && groupItemIds.every(id => selectedItems.has(id));
+                 const someSelected = groupItemIds.some(id => selectedItems.has(id));
+
+                 return (
+                   <div 
+                     key={group.id} 
+                     className="flex items-center gap-2 px-8 py-1.5 hover:bg-white/5 cursor-pointer group relative"
+                     onClick={() => toggleCustomGroup(group)}
+                   >
+                     <IndeterminateCheckbox
+                        checked={allSelected}
+                        indeterminate={someSelected && !allSelected}
+                        readOnly
+                        className="accent-poe-gold"
+                     />
+                     <span className="text-gray-300 text-sm flex-1">{group.name}</span>
+                     <span className="text-gray-600 text-xs mr-2">({group.items.length})</span>
+                     
+                     <button
+                       onClick={(e) => deleteCustomGroup(group.id, e)}
+                       className="text-gray-600 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                       title="Delete Group"
+                     >
+                       ✕
+                     </button>
+                   </div>
+                 );
+               })}
+             </div>
+          </div>
+        )}
+
         {Object.entries(filteredCategories).map(([category, categoryItems]) => {
           const allSelected = categoryItems.length > 0 && categoryItems.every(item => selectedItems.has(item.id));
           const someSelected = categoryItems.some(item => selectedItems.has(item.id));
