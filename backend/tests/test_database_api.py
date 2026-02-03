@@ -1,19 +1,27 @@
 import pytest
-from backend.server import app, db, init_db
+import mongomock
+from mongoengine import connect, disconnect
+from backend.server import app
 from backend.database import ExcludedModifier, AnalysisResult
 
 @pytest.fixture
 def client():
+    # Disconnect any existing connections
+    disconnect()
+    # Connect to mongomock for testing
+    connect('mongoenginetest', mongo_client_class=mongomock.MongoClient)
+    
     app.config['TESTING'] = True
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///:memory:'
+    
+    # Clear database before each test
+    ExcludedModifier.objects.delete()
+    AnalysisResult.objects.delete()
     
     with app.test_client() as client:
-        with app.app_context():
-            # db is already initialized in server.py, just create tables
-            db.create_all()
-            yield client
-            db.session.remove()
-            db.drop_all()
+        yield client
+    
+    # Clean up
+    disconnect()
 
 def test_add_get_exclusion(client):
     """Test adding and retrieving an excluded modifier."""
@@ -59,17 +67,15 @@ def test_remove_exclusion(client):
 def test_save_and_get_analysis(client):
     """Test saving (simulated) and retrieving an analysis."""
     # Create analysis manually since the endpoint just reads
-    with app.app_context():
-        analysis = AnalysisResult(
-            base_type="Test Bow",
-            normal_avg_chaos=10.0,
-            magic_avg_chaos=50.0,
-            gap_chaos=40.0,
-            search_id="abc",
-            magic_search_id="def"
-        )
-        db.session.add(analysis)
-        db.session.commit()
+    analysis = AnalysisResult(
+        base_type="Test Bow",
+        normal_avg_chaos=10.0,
+        magic_avg_chaos=50.0,
+        gap_chaos=40.0,
+        search_id="abc",
+        magic_search_id="def"
+    )
+    analysis.save()
     
     # Get analyses
     response = client.get('/api/db/analyses')
@@ -96,19 +102,18 @@ def test_save_analysis_function(client):
         "magic_modifiers": [{"name": "Mod 2", "tier": "S1", "mod_type": "explicit", "rarity": "magic"}]
     }
     
-    with app.app_context():
-        # Run save_analysis
-        result = save_analysis(mock_analyzer, "Test Item", "sessid", excluded_mods=[])
-        
-        # Verify result
-        assert result.base_type == "Test Item"
-        assert result.gap_chaos == 10.0
-        
-        # Verify modifiers were saved
-        assert result.modifiers.count() == 2
-        
-        # Verify analyzer was called
-        mock_analyzer.analyze_gap.assert_called_once()
+    # Run save_analysis
+    result = save_analysis(mock_analyzer, "Test Item", "sessid", excluded_mods=[])
+    
+    # Verify result
+    assert result.base_type == "Test Item"
+    assert result.gap_chaos == 10.0
+    
+    # Verify modifiers were saved
+    assert len(result.modifiers) == 2
+    
+    # Verify analyzer was called
+    mock_analyzer.analyze_gap.assert_called_once()
 
 
 def test_custom_category_crud(client):
@@ -141,4 +146,5 @@ def test_custom_category_crud(client):
     # 4. Verify it's gone
     response = client.get('/api/db/custom-categories')
     assert len(response.get_json()['data']) == 0
+
 
