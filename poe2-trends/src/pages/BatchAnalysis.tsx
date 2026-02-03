@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { getSessionId } from '../utils/storage';
 import { Link } from 'react-router-dom';
 import type { BatchResult } from '../types';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import toast from 'react-hot-toast';
 import { ItemTree } from '../components/ItemTree';
 
@@ -191,9 +192,23 @@ export const BatchAnalysis: React.FC = () => {
         }
 
         const data = await response.json();
-        if (data && data.length > 0) {
+        
+        // Handle case where backend returns single error object instead of list
+        if (data && data.error) {
+          throw new Error(data.error);
+        }
+
+        if (data && Array.isArray(data) && data.length > 0) {
           const newResult = data[0];
           
+          // Validate result to prevent crashes
+          if (!newResult || typeof newResult.normal_avg_chaos !== 'number') {
+             console.error('Invalid result received:', newResult);
+             toast.error(`Received invalid data for ${base}`);
+             setProcessedCount(prev => prev + 1);
+             continue;
+          }
+
           // Update allResults: replace existing entry for this base, or add if new
           setAllResults(prev => {
             const index = prev.findIndex(r => r.base_type === newResult.base_type);
@@ -230,7 +245,8 @@ export const BatchAnalysis: React.FC = () => {
   };
 
   return (
-    <div className="flex h-screen bg-poe-bg text-gray-200 overflow-hidden">
+    <ErrorBoundary>
+      <div className="flex h-screen bg-poe-bg text-gray-200 overflow-hidden">
       {/* Input Panel */}
       <div className="w-1/3 p-6 border-r border-poe-border flex flex-col bg-poe-card/50">
         <h2 className="text-xl font-serif text-poe-gold mb-4 font-bold tracking-wide">
@@ -352,11 +368,15 @@ export const BatchAnalysis: React.FC = () => {
                 </thead>
                 <tbody className="divide-y divide-poe-border/30 bg-poe-card/30">
                   {displayedResults.map((row, idx) => {
-                    const roi = row.normal_avg_chaos > 0 
-                      ? ((row.gap_chaos / row.normal_avg_chaos) * 100) 
+                    const normalPrice = row.normal_avg_chaos || 0;
+                    const magicPrice = row.magic_avg_chaos || 0;
+                    const gap = row.gap_chaos || 0;
+                    
+                    const roi = normalPrice > 0 
+                      ? ((gap / normalPrice) * 100) 
                       : 0;
                     
-                    const isPositive = row.gap_chaos > 0;
+                    const isPositive = gap > 0;
                     const isHighRoi = roi > 50;
                     
                     // Build trade URL for this base type
@@ -378,7 +398,7 @@ export const BatchAnalysis: React.FC = () => {
                         >
                           <td className="p-4 font-medium text-poe-highlight">
                             <span className="mr-2">{expandedRows.has(idx) ? '▼' : '▶'}</span>
-                            {row.base_type}
+                            {row.base_type || 'Unknown Base'}
                           </td>
                           <td className="p-4 text-right text-gray-400">
                             <a
@@ -389,7 +409,7 @@ export const BatchAnalysis: React.FC = () => {
                               title="View Normal items on PoE Trade"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              {row.normal_avg_chaos.toFixed(2)} Ex
+                              {normalPrice.toFixed(2)} Ex
                             </a>
                           </td>
                           <td className="p-4 text-right text-blue-300">
@@ -401,11 +421,11 @@ export const BatchAnalysis: React.FC = () => {
                               title="View Magic items on PoE Trade"
                               onClick={(e) => e.stopPropagation()}
                             >
-                              {row.magic_avg_chaos.toFixed(2)} Ex
+                              {magicPrice.toFixed(2)} Ex
                             </a>
                           </td>
                           <td className={`p-4 text-right font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
-                            {row.gap_chaos > 0 ? '+' : ''}{row.gap_chaos.toFixed(2)} Ex
+                            {gap > 0 ? '+' : ''}{gap.toFixed(2)} Ex
                           </td>
                           <td className={`p-4 text-right font-mono ${isHighRoi ? 'text-poe-gold' : 'text-gray-500'}`}>
                             {roi.toFixed(0)}%
@@ -458,6 +478,7 @@ export const BatchAnalysis: React.FC = () => {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </ErrorBoundary>
   );
 };
