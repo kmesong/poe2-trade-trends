@@ -27,7 +27,7 @@ else:
 from backend.price_analyzer import PriceAnalyzer
 from backend.database import (
     init_db, AnalysisResult, Modifier, ExcludedModifier, CustomCategory,
-    save_analysis, get_excluded_mods
+    SearchHistory, save_analysis, get_excluded_mods
 )
 
 app = Flask(__name__, static_folder='../../poe2-trends/dist', static_url_path='/')
@@ -57,14 +57,10 @@ def static_proxy(path):
 # Configuration
 SEARCH_URL_BASE = "https://www.pathofexile.com/api/trade2/search/poe2/"
 FETCH_URL_BASE = "https://www.pathofexile.com/api/trade2/fetch/"
-HISTORY_DIR = "saved_data"
 
 def get_session_id():
     """Extract session ID from header or environment."""
     return request.headers.get("X-POESESSID") or os.getenv("POESESSID")
-
-if not os.path.exists(HISTORY_DIR):
-    os.makedirs(HISTORY_DIR)
 
 # Default Headers (User-Agent is critical)
 HEADERS = {
@@ -218,68 +214,62 @@ def analyze_items_logic(items):
 
 @app.route('/history', methods=['GET'])
 def list_history():
-    files = []
-    if os.path.exists(HISTORY_DIR):
-        for f in os.listdir(HISTORY_DIR):
-            if f.endswith(".json"):
-                path = os.path.join(HISTORY_DIR, f)
-                try:
-                    with open(path, 'r', encoding='utf-8') as file:
-                        meta = json.load(file)
-                        files.append({
-                            "filename": f,
-                            "name": meta.get("name", f),
-                            "date": meta.get("date"),
-                            "timestamp": meta.get("timestamp", 0)
-                        })
-                except: pass
-    
-    files.sort(key=lambda x: x.get("timestamp", 0), reverse=True)
-    return jsonify(files)
+    try:
+        # Fetch from MongoDB
+        histories = SearchHistory.objects.order_by('-created_at').limit(100)
+        results = []
+        for h in histories:
+            d = h.to_dict()
+            results.append({
+                "filename": d["id"], # Keep key for frontend compatibility
+                "name": d["name"],
+                "date": d["created_at"],
+                "timestamp": d["timestamp"]
+            })
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/history/<filename>', methods=['GET'])
 def get_history_item(filename):
-    if not filename.endswith('.json') or '/' in filename or '\\' in filename:
-        return jsonify({"error": "Invalid filename"}), 400
-        
-    path = os.path.join(HISTORY_DIR, filename)
-    if not os.path.exists(path):
-        return jsonify({"error": "File not found"}), 404
-        
-    with open(path, 'r', encoding='utf-8') as f:
-        data = json.load(f)
-    return jsonify(data.get("results", {}))
+    try:
+        # Fetch by ID from MongoDB (filename is actually the ID now)
+        history = SearchHistory.objects(id=filename).first()
+        if not history:
+            return jsonify({"error": "Item not found"}), 404
+            
+        return jsonify(history.results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 @app.route('/save', methods=['POST'])
 def save_history():
-    data = request.json
-    name = data.get("name")
-    results = data.get("results")
-    query = data.get("query")
-    
-    if not name or not results:
-        return jsonify({"error": "Missing name or results"}), 400
-    
-    timestamp = int(time.time())
-    date_str = time.strftime("%Y-%m-%d %H:%M:%S")
-    
-    # Sanitize name
-    safe_name = re.sub(r'[^a-zA-Z0-9_\- ]', '', name).strip().replace(' ', '_')
-    filename = f"{timestamp}_{safe_name}.json"
-    
-    save_data = {
-        "name": name,
-        "date": date_str,
-        "timestamp": timestamp,
-        "query": query,
-        "results": results
-    }
-    
-    path = os.path.join(HISTORY_DIR, filename)
     try:
-        with open(path, 'w', encoding='utf-8') as f:
-            json.dump(save_data, f)
-        return jsonify({"success": True, "filename": filename, "date": date_str, "timestamp": timestamp})
+        data = request.json
+        if not data:
+            return jsonify({"error": "No JSON payload provided"}), 400
+        name = data.get("name")
+        results = data.get("results")
+        query = data.get("query")
+        
+        if not name or not results:
+            return jsonify({"error": "Missing name or results"}), 400
+        
+        # Save to MongoDB
+        history = SearchHistory(
+            name=name,
+            query=query,
+            results=results
+        )
+        history.save()
+        
+        result_dict = history.to_dict()
+        return jsonify({
+            "success": True, 
+            "filename": result_dict["id"], # Keep key for frontend compatibility
+            "date": result_dict["created_at"], 
+            "timestamp": result_dict["timestamp"]
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
