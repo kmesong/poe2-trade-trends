@@ -3,36 +3,37 @@ Database models and session management for PoE2 Trade Analysis.
 Uses MongoDB with MongoEngine for flexible document storage.
 """
 from datetime import datetime
-from flask_mongoengine import MongoEngine
+from mongoengine import (
+    connect, Document, EmbeddedDocument, StringField, FloatField, 
+    DateTimeField, ListField, EmbeddedDocumentField, BooleanField
+)
 import json
 
-db = MongoEngine()
 
-
-class Modifier(db.EmbeddedDocument):
+class Modifier(EmbeddedDocument):
     """
     Stores individual modifier data from an analysis.
     Embedded inside AnalysisResult.
     """
     # Modifier identification
-    name = db.StringField(required=True)
-    tier = db.StringField(required=True)  # e.g., "P1", "S1"
-    mod_type = db.StringField(required=True)  # explicit, implicit, etc.
+    name = StringField(required=True)
+    tier = StringField(required=True)  # e.g., "P1", "S1"
+    mod_type = StringField(required=True)  # explicit, implicit, etc.
 
     # Item context
-    rarity = db.StringField(required=True)  # normal, magic, rare
-    item_name = db.StringField()
-    display_text = db.StringField() # The full text from the item
+    rarity = StringField(required=True)  # normal, magic, rare
+    item_name = StringField()
+    display_text = StringField() # The full text from the item
 
     # Price data (if available)
-    price_chaos = db.FloatField()
+    price_chaos = FloatField()
 
     # Magnitude values (min/max for the mod)
-    magnitude_min = db.FloatField()
-    magnitude_max = db.FloatField()
+    magnitude_min = FloatField()
+    magnitude_max = FloatField()
 
     # Additional metadata
-    mod_group = db.StringField()  # e.g., "Life", "Resistance"
+    mod_group = StringField()
 
     def to_dict(self):
         """Convert to dictionary for API responses."""
@@ -50,29 +51,29 @@ class Modifier(db.EmbeddedDocument):
         }
 
 
-class AnalysisResult(db.Document):
+class AnalysisResult(Document):
     """
     Stores a complete analysis run for a specific base type.
     Includes all modifiers found during this analysis as embedded documents.
     """
-    base_type = db.StringField(required=True)
-    created_at = db.DateTimeField(default=datetime.utcnow)
+    base_type = StringField(required=True)
+    created_at = DateTimeField(default=datetime.utcnow)
 
     # Price data
-    normal_avg_chaos = db.FloatField(required=True)
-    crafting_avg_chaos = db.FloatField(default=0.0)
-    magic_avg_chaos = db.FloatField(required=True)
-    gap_chaos = db.FloatField(required=True)
+    normal_avg_chaos = FloatField(required=True)
+    crafting_avg_chaos = FloatField(default=0.0)
+    magic_avg_chaos = FloatField(required=True)
+    gap_chaos = FloatField(required=True)
 
     # Search IDs for trade links
-    search_id = db.StringField()
-    magic_search_id = db.StringField()
+    search_id = StringField()
+    magic_search_id = StringField()
 
     # Raw data snapshot
-    raw_data = db.StringField()
+    raw_data = StringField()
 
     # Embedded modifiers
-    modifiers = db.ListField(db.EmbeddedDocumentField(Modifier))
+    modifiers = ListField(EmbeddedDocumentField(Modifier))
 
     meta = {
         'indexes': [
@@ -100,22 +101,22 @@ class AnalysisResult(db.Document):
         }
 
 
-class ExcludedModifier(db.Document):
+class ExcludedModifier(Document):
     """
     User preferences for modifiers to exclude from analysis.
     """
-    created_at = db.DateTimeField(default=datetime.utcnow)
+    created_at = DateTimeField(default=datetime.utcnow)
 
     # Matching criteria (at least one must be set)
-    mod_name_pattern = db.StringField()  # Regex pattern for MongoDB
-    mod_tier = db.StringField()  # e.g., "P1", "S1"
-    mod_type = db.StringField()  # explicit, implicit, etc.
+    mod_name_pattern = StringField()  # Regex pattern for MongoDB
+    mod_tier = StringField()  # e.g., "P1", "S1"
+    mod_type = StringField()  # explicit, implicit, etc.
 
     # Reason/notes
-    reason = db.StringField()
+    reason = StringField()
 
     # Active flag
-    is_active = db.BooleanField(default=True)
+    is_active = BooleanField(default=True)
 
     meta = {
         'indexes': [
@@ -170,12 +171,12 @@ class ExcludedModifier(db.Document):
         return True
 
 
-class CustomCategory(db.Document):
+class CustomCategory(Document):
     """
     User-defined item categories for grouping items.
     """
-    name = db.StringField(unique=True, required=True)
-    items = db.ListField(db.StringField())  # List of item base names
+    name = StringField(unique=True, required=True)
+    items = ListField(StringField())  # List of item base names
 
     meta = {
         'indexes': [
@@ -194,14 +195,21 @@ class CustomCategory(db.Document):
 
 def init_db(app):
     """
-    Initialize the database with the Flask app.
+    Initialize the database connection.
     """
-    db.init_app(app)
+    mongodb_uri = app.config.get('MONGODB_URI') or app.config.get('MONGODB_SETTINGS', {}).get('host')
+    if mongodb_uri:
+        connect(host=mongodb_uri)
+    else:
+        # Default to localhost if no config found
+        connect(host='mongodb://localhost:27017/poe2_trade')
 
 
 def get_db():
     """Get the database connection."""
-    return db
+    import mongoengine
+    return mongoengine.connection.get_db()
+
 
 
 def save_analysis(analyzer, base_type: str, session_id: str = None,
