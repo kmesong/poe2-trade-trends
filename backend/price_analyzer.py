@@ -266,7 +266,10 @@ class PriceAnalyzer:
             if i + 10 < min(len(all_ids), max_items_to_check) and len(prices) < target_count:
                 time.sleep(0.5)
             
-            avg_price = sum(prices) / len(prices) if prices else 0.0
+            if len(prices) < target_count:
+                return 0.0, []
+                
+            avg_price = sum(prices) / len(prices)
             
             # Deduplicate modifiers
             # Keep the one with the best display text (longest/most descriptive)
@@ -462,7 +465,7 @@ class PriceAnalyzer:
                 if i + 10 < min(len(all_ids), max_items_to_check) and len(prices) < target_count:
                     time.sleep(0.5)
             
-            if not prices:
+            if len(prices) < target_count:
                 return 0.0
                 
             return sum(prices) / len(prices)
