@@ -78,3 +78,14 @@ export interface ModifierDB {
   magnitude_max: number | null;
   mod_group: string | null;
 }
+
+export interface JobResponse {
+  id: string;
+  status: 'queued' | 'processing' | 'completed' | 'failed';
+  progress: number;
+  total: number;
+  current_item: string | null;
+  results: BatchResult[];
+  error: string | null;
+  created_at: string;
+}

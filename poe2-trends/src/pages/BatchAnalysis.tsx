@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { getSessionId } from '../utils/storage';
 import { Link } from 'react-router-dom';
-import type { BatchResult } from '../types';
+import type { BatchResult, JobResponse } from '../types';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import toast from 'react-hot-toast';
 import { ItemTree } from '../components/ItemTree';
@@ -20,11 +20,9 @@ export const BatchAnalysis: React.FC = () => {
   const [totalBases, setTotalBases] = useState(0);
   const [processedCount, setProcessedCount] = useState(0);
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
-  const [rateLimitWait, setRateLimitWait] = useState<number | null>(null);
-  const [isRateLimited, setIsRateLimited] = useState(false);
-
-  const abortControllerRef = useRef<AbortController | null>(null);
-
+  
+  const [activeJobId, setActiveJobId] = useState<string | null>(null);
+  
   // Initial load of latest data
   useEffect(() => {
     loadLatestAnalyses();
@@ -41,6 +39,63 @@ export const BatchAnalysis: React.FC = () => {
       setDisplayedResults(filtered);
     }
   }, [selectedItems, allResults]);
+
+  // Polling for active job
+  useEffect(() => {
+    if (!activeJobId) return;
+
+    const pollJob = async () => {
+      try {
+        const response = await fetch(`/api/jobs/${activeJobId}`);
+        if (!response.ok) {
+           if (response.status === 404) {
+             throw new Error("Job not found");
+           }
+           return;
+        }
+        
+        const data: JobResponse = await response.json();
+        
+        setProcessedCount(data.progress);
+        setTotalBases(data.total);
+        if (data.current_item) setCurrentBase(data.current_item);
+        
+        if (data.results && data.results.length > 0) {
+           setAllResults(prev => {
+             const updated = [...prev];
+             
+             for (const newResult of data.results) {
+               const index = updated.findIndex(r => r.base_type === newResult.base_type);
+               if (index >= 0) {
+                 updated[index] = newResult;
+               } else {
+                 updated.unshift(newResult);
+               }
+             }
+             return updated;
+           });
+        }
+
+        if (data.status === 'completed') {
+          setIsAnalysing(false);
+          setActiveJobId(null);
+          toast.success('Analysis complete!');
+        } else if (data.status === 'failed') {
+          setIsAnalysing(false);
+          setActiveJobId(null);
+          setError(data.error || 'Job failed');
+          toast.error(`Job failed: ${data.error}`);
+        }
+      } catch (err) {
+        console.error("Polling error:", err);
+      }
+    };
+
+    const intervalId = setInterval(pollJob, 2000);
+    pollJob();
+
+    return () => clearInterval(intervalId);
+  }, [activeJobId]);
 
   const loadLatestAnalyses = async () => {
     try {
@@ -105,7 +160,11 @@ export const BatchAnalysis: React.FC = () => {
   };
 
   const handleStop = () => {
-    abortControllerRef.current?.abort();
+    // Currently we just stop polling on frontend, but ideally we should cancel the job
+    // For now, just reset frontend state
+    setIsAnalysing(false);
+    setActiveJobId(null);
+    toast('Analysis monitoring stopped (Background job may continue)', { icon: '⚠️' });
   };
 
   const handleAnalyze = async () => {
@@ -129,118 +188,40 @@ export const BatchAnalysis: React.FC = () => {
     setError(null);
     setTotalBases(bases.length);
     setProcessedCount(0);
-    setCurrentBase(null);
+    setCurrentBase('Initializing...');
     
-    abortControllerRef.current = new AbortController();
-
     try {
-      for (let i = 0; i < bases.length; i++) {
-        const base = bases[i];
-        
-        if (abortControllerRef.current?.signal.aborted) break;
-        
-        setCurrentBase(base);
+      const response = await fetch('/api/jobs/batch-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-POESESSID': sessionId
+        },
+        body: JSON.stringify({ bases })
+      });
 
-        const response = await fetch('/analyze/batch-price', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'X-POESESSID': sessionId
-          },
-          body: JSON.stringify({ bases: [base] }),
-          signal: abortControllerRef.current?.signal
-        });
-
-        if (!response.ok) {
-          const contentType = response.headers.get('content-type');
-          let errorMsg = `Analysis failed for ${base}`;
-          let waitSeconds = 0;
-          
-          if (contentType && contentType.includes('application/json')) {
-            const data = await response.json();
-            errorMsg = data.error || errorMsg;
-            
-            const retryAfter = response.headers.get('retry-after');
-            if (retryAfter) {
-              waitSeconds = parseInt(retryAfter, 10) || 60;
-            }
-          }
-          
-          if (errorMsg.includes('502') || errorMsg.includes('Bad Gateway')) {
-            setIsRateLimited(true);
-            setRateLimitWait(30);
-            toast.error(`Server busy (502) - waiting 30s...`);
-            await new Promise(resolve => setTimeout(resolve, 30000));
-            setIsRateLimited(false);
-            setRateLimitWait(null);
-            i--; 
-            continue;
-          } else if (errorMsg.includes('429') || errorMsg.includes('Rate limit')) {
-            setIsRateLimited(true);
-            setRateLimitWait(waitSeconds || 60);
-            toast.error(`Rate limited - waiting ${waitSeconds || 60}s...`);
-            await new Promise(resolve => setTimeout(resolve, (waitSeconds || 60) * 1000));
-            setIsRateLimited(false);
-            setRateLimitWait(null);
-            i--; 
-            continue;
-          } else {
-            toast.error(errorMsg);
-          }
-          setProcessedCount(prev => prev + 1);
-          continue; 
-        }
-
+      if (!response.ok) {
         const data = await response.json();
-        
-        // Handle case where backend returns single error object instead of list
-        if (data && data.error) {
-          throw new Error(data.error);
-        }
-
-        if (data && Array.isArray(data) && data.length > 0) {
-          const newResult = data[0];
-          
-          // Validate result to prevent crashes
-          if (!newResult || typeof newResult.normal_avg_chaos !== 'number') {
-             console.error('Invalid result received:', newResult);
-             toast.error(`Received invalid data for ${base}`);
-             setProcessedCount(prev => prev + 1);
-             continue;
-          }
-
-          // Update allResults: replace existing entry for this base, or add if new
-          setAllResults(prev => {
-            const index = prev.findIndex(r => r.base_type === newResult.base_type);
-            if (index >= 0) {
-              const updated = [...prev];
-              updated[index] = newResult;
-              return updated;
-            }
-            return [newResult, ...prev];
-          });
-        }
-        
-        setProcessedCount(prev => prev + 1);
-
-        if (i < bases.length - 1) {
-          if (abortControllerRef.current?.signal.aborted) break;
-          await new Promise(resolve => setTimeout(resolve, 2000));
-        }
+        throw new Error(data.error || 'Failed to start analysis job');
       }
-      toast.success('Analysis complete!');
+
+      const data = await response.json();
+      if (data.success && data.job_id) {
+        setActiveJobId(data.job_id);
+        toast.success('Analysis job started');
+      } else {
+        throw new Error('Invalid server response');
+      }
+
     } catch (err: unknown) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        console.log('Analysis stopped by user');
-      } else if (err instanceof Error) {
+      setIsAnalysing(false);
+      if (err instanceof Error) {
         setError(err.message);
+        toast.error(err.message);
       } else {
         setError('An unexpected error occurred');
+        toast.error('An unexpected error occurred');
       }
-    } finally {
-      setIsAnalysing(false);
-      setCurrentBase(null);
-      abortControllerRef.current = null;
     }
   };
 
@@ -320,10 +301,8 @@ export const BatchAnalysis: React.FC = () => {
               <div className="flex justify-between items-end mb-3">
                 <div className="flex flex-col">
                   <span className="text-[10px] text-gray-500 uppercase font-bold tracking-[0.2em] mb-1">Current Task</span>
-                  <span className={`text-sm font-serif italic tracking-wide ${isRateLimited ? 'text-red-400' : 'text-poe-gold'}`}>
-                    {isRateLimited 
-                      ? `Rate Limited - Waiting ${rateLimitWait || '...'}s...` 
-                      : `Analyzing ${currentBase || 'Market'}...`}
+                  <span className="text-sm font-serif italic tracking-wide text-poe-gold">
+                    Analyzing {currentBase || 'Market'}...
                   </span>
                 </div>
                 <div className="text-right">
@@ -335,11 +314,7 @@ export const BatchAnalysis: React.FC = () => {
               </div>
               <div className="w-full h-1.5 bg-black/60 rounded-full overflow-hidden border border-poe-border/20 p-[1px]">
                 <div 
-                  className={`h-full rounded-full shadow-[0_0_12px_rgba(233,176,79,0.3)] transition-all duration-700 ease-out ${
-                    isRateLimited 
-                      ? 'bg-red-500/50 animate-pulse' 
-                      : 'bg-gradient-to-r from-poe-gold/40 via-poe-gold to-poe-golddim'
-                  }`}
+                  className="h-full rounded-full shadow-[0_0_12px_rgba(233,176,79,0.3)] transition-all duration-700 ease-out bg-gradient-to-r from-poe-gold/40 via-poe-gold to-poe-golddim"
                   style={{ width: `${Math.min(100, (processedCount / totalBases) * 100)}%` }}
                 />
               </div>
