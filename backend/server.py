@@ -368,6 +368,7 @@ def batch_price_analysis():
     # Get active exclusions
     exclusions = get_excluded_mods()
     
+    analyzer = PriceAnalyzer()
     results = []
     for base in bases:
         print(f"Analyzing {base}...")
@@ -379,42 +380,6 @@ def batch_price_analysis():
                 session_id=session_id,
                 excluded_mods=exclusions
             )
-            
-            # Convert DB result to dictionary for response
-            # We need to construct the response format expected by frontend
-            # The frontend expects { base_type, normal_avg_chaos, magic_avg_chaos, gap_chaos, ... }
-            # which is what analysis.to_dict() provides, mostly.
-            
-            # However, analysis.to_dict() returns 'modifiers' key, but the frontend might check 'normal_modifiers' 
-            # and 'magic_modifiers'. But currently save_analysis doesn't save full modifiers list to DB yet 
-            # (there is a TODO in database.py).
-            
-            # Wait, PriceAnalyzer.analyze_gap returns the full dict with modifiers.
-            # save_analysis returns the DB object.
-            # If I want to return the FULL data to frontend (including modifiers), I should probably 
-            # modify save_analysis to return the raw result OR capture it.
-            
-            # Let's check save_analysis again. It calls analyzer.analyze_gap.
-            # But it doesn't return the raw result, only the DB object.
-            
-            # If I switch to using save_analysis, I might lose the detailed modifiers in the response 
-            # if the DB doesn't store them fully or if to_dict() doesn't return them in the same format.
-            
-            # database.py:
-            # TODO: Store full modifier data from the API response
-            # Currently we only have aggregated data
-            
-            # This implies save_analysis is LOSSY right now regarding modifiers list (it saves empty list or aggregated?).
-            # Actually, AnalysisResult has a relationship 'modifiers', but the code in save_analysis 
-            # does NOT populate it yet (comment says TODO).
-            
-            # So if I use save_analysis, the frontend will lose the ability to see the modifiers 
-            # unless I fix that TODO in database.py as well.
-            
-            # So I MUST fix the TODO in database.py to save modifiers, or refactor save_analysis to return the raw result too.
-            
-            # For now, I will assume I need to fix the saving of modifiers too.
-            pass 
         except Exception as e:
             print(f"Error analyzing {base}: {e}")
             results.append({"base_type": base, "error": str(e)})
