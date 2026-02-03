@@ -481,11 +481,15 @@ export const BatchAnalysis: React.FC = () => {
                     // PoE trade: https://www.pathofexile.com/trade2/search/poe2/LEAGUE/SEARCH_ID
                     const searchId = row.search_id || '';
                     const magicSearchId = row.magic_search_id || '';
+                    const craftingSearchId = row.crafting_search_id || '';
                     const normalUrl = searchId
                         ? `https://www.pathofexile.com/trade2/search/poe2/Fate%20of%20the%20Vaal/${searchId}`
                         : `https://www.pathofexile.com/trade2/search/poe2/Fate%20of%20the%20Vaal`;
                     const magicUrl = magicSearchId
                         ? `https://www.pathofexile.com/trade2/search/poe2/Fate%20of%20the%20Vaal/${magicSearchId}`
+                        : normalUrl;
+                    const craftingUrl = craftingSearchId
+                        ? `https://www.pathofexile.com/trade2/search/poe2/Fate%20of%20the%20Vaal/${craftingSearchId}`
                         : normalUrl;
 
                     return (
@@ -511,7 +515,16 @@ export const BatchAnalysis: React.FC = () => {
                             </a>
                           </td>
                           <td className="p-4 text-right text-gray-400" title="ilvl 82+, Min 2 Rune Sockets">
-                            {craftingPrice.toFixed(2)} Ex
+                            <a
+                              href={craftingUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-poe-gold hover:underline cursor-pointer"
+                              title="View Crafting items on PoE Trade"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {craftingPrice.toFixed(2)} Ex
+                            </a>
                           </td>
                           <td className="p-4 text-right text-blue-300">
                             <a

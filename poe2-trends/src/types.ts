@@ -40,6 +40,7 @@ export interface BatchResult {
   gap_ex: number;
   search_id?: string;
   magic_search_id?: string;
+  crafting_search_id?: string;
   normal_modifiers?: ModifierData[];
   magic_modifiers?: ModifierData[];
 }
@@ -63,6 +64,7 @@ export interface AnalysisResultDB {
   gap_ex: number;
   search_id: string | null;
   magic_search_id: string | null;
+  crafting_search_id: string | null;
   modifiers: ModifierDB[];
 }
 
