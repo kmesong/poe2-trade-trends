@@ -24,29 +24,15 @@ from backend.database import (
 app = Flask(__name__, static_folder='../../poe2-trends/dist', static_url_path='/')
 CORS(app)
 
-# Ensure instance folder exists for SQLite database
-os.makedirs('instance', exist_ok=True)
-
 # Database configuration
-db_url = os.getenv('DATABASE_URL', '').strip().rstrip('/')
-if db_url:
-    # Fix protocols for SQLAlchemy compatibility
-    if db_url.startswith('postgres://'):
-        db_url = db_url.replace('postgres://', 'postgresql://', 1)
-    elif db_url.startswith('libsql://'):
-        db_url = db_url.replace('libsql://', 'sqlite+libsql://', 1)
-    elif db_url.startswith('https://'):
-        db_url = db_url.replace('https://', 'sqlite+libsql://', 1)
-else:
-    db_url = 'sqlite:///poe2_trade.db'
+mongodb_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/poe2_trade')
+app.config['MONGODB_SETTINGS'] = {
+    'host': mongodb_uri
+}
 
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
-# Initialize database and create tables
+# Initialize database
 init_db(app)
-with app.app_context():
-    db.create_all()
+
 @app.route('/')
 def index():
     try:
@@ -494,14 +480,14 @@ def get_analyses():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/db/analyses/<int:analysis_id>', methods=['GET'])
+@app.route('/api/db/analyses/<string:analysis_id>', methods=['GET'])
 def get_analysis(analysis_id):
     """
     Get a specific analysis result by ID.
     """
     try:
         from backend.database import AnalysisResult
-        analysis = AnalysisResult.query.get_or_404(analysis_id)
+        analysis = AnalysisResult.objects.get_or_404(id=analysis_id)
 
         return jsonify({
             'success': True,
@@ -560,7 +546,7 @@ def add_exclusion():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/db/exclusions/<int:exclusion_id>', methods=['DELETE'])
+@app.route('/api/db/exclusions/<string:exclusion_id>', methods=['DELETE'])
 def remove_exclusion(exclusion_id):
     """
     Remove (deactivate) an excluded modifier rule.
@@ -578,7 +564,7 @@ def remove_exclusion(exclusion_id):
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/db/exclusions/<int:exclusion_id>', methods=['PUT'])
+@app.route('/api/db/exclusions/<string:exclusion_id>', methods=['PUT'])
 def update_exclusion(exclusion_id):
     """
     Update an excluded modifier rule.
@@ -586,7 +572,7 @@ def update_exclusion(exclusion_id):
     try:
         from backend.database import ExcludedModifier
 
-        exclusion = ExcludedModifier.query.get_or_404(exclusion_id)
+        exclusion = ExcludedModifier.objects.get_or_404(id=exclusion_id)
         data = request.json or {}
 
         if 'mod_name_pattern' in data:
@@ -600,7 +586,7 @@ def update_exclusion(exclusion_id):
         if 'is_active' in data:
             exclusion.is_active = data['is_active']
 
-        db.session.commit()
+        exclusion.save()
 
         return jsonify({
             'success': True,
@@ -618,7 +604,7 @@ def get_custom_categories():
     Get all user-defined custom categories.
     """
     try:
-        categories = CustomCategory.query.all()
+        categories = CustomCategory.objects.all()
         return jsonify({
             'success': True,
             'data': [c.to_dict() for c in categories],
@@ -644,35 +630,29 @@ def create_custom_category():
         if not name:
             return jsonify({'success': False, 'error': 'Name is required'}), 400
 
-        # Convert list to comma-separated string
-        items_str = ','.join([str(i).strip() for i in items_list])
-
-        category = CustomCategory(name=name, items=items_str)
-        db.session.add(category)
-        db.session.commit()
+        category = CustomCategory(name=name, items=items_list)
+        category.save()
 
         return jsonify({
             'success': True,
             'data': category.to_dict()
         })
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
-@app.route('/api/db/custom-categories/<int:category_id>', methods=['DELETE'])
+@app.route('/api/db/custom-categories/<string:category_id>', methods=['DELETE'])
 def delete_custom_category(category_id):
     """
     Delete a custom category by ID.
     """
     try:
-        category = CustomCategory.query.get_or_404(category_id)
-        db.session.delete(category)
-        db.session.commit()
+        category = CustomCategory.objects.get_or_404(id=category_id)
+        category.delete()
         return jsonify({'success': True, 'message': 'Category deleted'})
     except Exception as e:
-        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
+
 
 
 if __name__ == '__main__':
