@@ -2,8 +2,5 @@ flask
 flask-cors
 requests
 python-dotenv
-flask-sqlalchemy
-sqlalchemy
+flask-mongoengine
 gunicorn
-sqlalchemy-libsql
-libsql-experimental
