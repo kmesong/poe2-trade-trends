@@ -17,7 +17,7 @@ load_dotenv()
 
 from backend.price_analyzer import PriceAnalyzer
 from backend.database import (
-    db, init_db, AnalysisResult, Modifier, ExcludedModifier,
+    db, init_db, AnalysisResult, Modifier, ExcludedModifier, CustomCategory,
     save_analysis, get_excluded_mods
 )
 
@@ -595,6 +595,71 @@ def update_exclusion(exclusion_id):
             'data': exclusion.to_dict()
         })
     except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+# ============== Custom Category API Endpoints ==============
+
+@app.route('/api/db/custom-categories', methods=['GET'])
+def get_custom_categories():
+    """
+    Get all user-defined custom categories.
+    """
+    try:
+        categories = CustomCategory.query.all()
+        return jsonify({
+            'success': True,
+            'data': [c.to_dict() for c in categories],
+            'count': len(categories)
+        })
+    except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/db/custom-categories', methods=['POST'])
+def create_custom_category():
+    """
+    Create a new custom category.
+    Body:
+        - name: Name of the category (unique)
+        - items: List of item base names
+    """
+    try:
+        data = request.json or {}
+        name = data.get('name')
+        items_list = data.get('items', [])
+
+        if not name:
+            return jsonify({'success': False, 'error': 'Name is required'}), 400
+
+        # Convert list to comma-separated string
+        items_str = ','.join([str(i).strip() for i in items_list])
+
+        category = CustomCategory(name=name, items=items_str)
+        db.session.add(category)
+        db.session.commit()
+
+        return jsonify({
+            'success': True,
+            'data': category.to_dict()
+        })
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@app.route('/api/db/custom-categories/<int:category_id>', methods=['DELETE'])
+def delete_custom_category(category_id):
+    """
+    Delete a custom category by ID.
+    """
+    try:
+        category = CustomCategory.query.get_or_404(category_id)
+        db.session.delete(category)
+        db.session.commit()
+        return jsonify({'success': True, 'message': 'Category deleted'})
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 

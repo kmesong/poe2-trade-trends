@@ -110,3 +110,35 @@ def test_save_analysis_function(client):
         # Verify analyzer was called
         mock_analyzer.analyze_gap.assert_called_once()
 
+
+def test_custom_category_crud(client):
+    """Test creating, retrieving, and deleting a custom category."""
+    # 1. Create category
+    response = client.post('/api/db/custom-categories', json={
+        'name': 'My Starter Build',
+        'items': ['Expert Dualnock Bow', 'Expert Hunter Bow']
+    })
+    assert response.status_code == 200
+    data = response.get_json()
+    assert data['success'] is True
+    assert data['data']['name'] == 'My Starter Build'
+    assert data['data']['items'] == ['Expert Dualnock Bow', 'Expert Hunter Bow']
+
+    category_id = data['data']['id']
+
+    # 2. Get categories
+    response = client.get('/api/db/custom-categories')
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data['data']) == 1
+    assert data['data'][0]['name'] == 'My Starter Build'
+
+    # 3. Delete category
+    response = client.delete(f'/api/db/custom-categories/{category_id}')
+    assert response.status_code == 200
+    assert response.get_json()['success'] is True
+
+    # 4. Verify it's gone
+    response = client.get('/api/db/custom-categories')
+    assert len(response.get_json()['data']) == 0
+

@@ -153,6 +153,24 @@ class ExcludedModifier(db.Model):
         return True
 
 
+class CustomCategory(db.Model):
+    """
+    User-defined item categories for grouping items (e.g., "My Starter Build").
+    Stores a name and a list of item base names.
+    """
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), unique=True, nullable=False, index=True)
+    items = db.Column(db.Text, nullable=False)  # Comma-separated list of item base names
+
+    def to_dict(self):
+        """Convert to dictionary for API responses."""
+        return {
+            'id': self.id,
+            'name': self.name,
+            'items': [i.strip() for i in self.items.split(',')] if self.items else []
+        }
+
+
 def init_db(app):
     """
     Initialize the database with the Flask app.
