@@ -29,8 +29,15 @@ os.makedirs('instance', exist_ok=True)
 
 # Database configuration
 db_url = os.getenv('DATABASE_URL')
-if not db_url:
+if db_url:
+    # Fix protocols for SQLAlchemy compatibility
+    if db_url.startswith('postgres://'):
+        db_url = db_url.replace('postgres://', 'postgresql://', 1)
+    elif db_url.startswith('libsql://'):
+        db_url = db_url.replace('libsql://', 'sqlite+libsql://', 1)
+else:
     db_url = 'sqlite:///poe2_trade.db'
+
 app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
