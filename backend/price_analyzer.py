@@ -53,6 +53,7 @@ class PriceAnalyzer:
         }
         normal_craft_result = self._get_search_result(api, normal_craft_query)
         normal_craft_avg, _ = self._calculate_average_from_result(api, normal_craft_result, exclusions=exclusions)
+        crafting_search_id = normal_craft_result.get("id") if normal_craft_result else None
         
         # 3. Search Magic
         magic_query = {
@@ -135,6 +136,7 @@ class PriceAnalyzer:
             "gap_ex": round(magic_avg - normal_craft_avg, 2),
             "search_id": search_id,
             "magic_search_id": magic_search_id,
+            "crafting_search_id": crafting_search_id,
             "normal_modifiers": normal_mods,
             "magic_modifiers": magic_mods
         }

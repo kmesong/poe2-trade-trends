@@ -69,6 +69,7 @@ class AnalysisResult(Document):
     # Search IDs for trade links
     search_id = StringField()
     magic_search_id = StringField()
+    crafting_search_id = StringField()
 
     # Raw data snapshot
     raw_data = StringField()
@@ -96,6 +97,7 @@ class AnalysisResult(Document):
             'gap_ex': self.gap_ex,
             'search_id': self.search_id,
             'magic_search_id': self.magic_search_id,
+            'crafting_search_id': self.crafting_search_id,
             'modifiers': all_mods,
             'normal_modifiers': [m for m in all_mods if str(m['rarity']).lower() in ['normal', 'unknown']],
             'magic_modifiers': [m for m in all_mods if str(m['rarity']).lower() == 'magic']
@@ -321,6 +323,7 @@ def save_analysis(analyzer, base_type: str, session_id: str = None,
         gap_ex=result['gap_ex'],
         search_id=result.get('search_id'),
         magic_search_id=result.get('magic_search_id'),
+        crafting_search_id=result.get('crafting_search_id'),
         modifiers=modifiers
     )
 
