@@ -17,7 +17,7 @@ load_dotenv()
 
 from backend.price_analyzer import PriceAnalyzer
 from backend.database import (
-    db, init_db, AnalysisResult, Modifier, ExcludedModifier, CustomCategory,
+    init_db, AnalysisResult, Modifier, ExcludedModifier, CustomCategory,
     save_analysis, get_excluded_mods
 )
 
@@ -26,9 +26,7 @@ CORS(app)
 
 # Database configuration
 mongodb_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/poe2_trade')
-app.config['MONGODB_SETTINGS'] = {
-    'host': mongodb_uri
-}
+app.config['MONGODB_URI'] = mongodb_uri
 
 # Initialize database
 init_db(app)
@@ -486,8 +484,9 @@ def get_analysis(analysis_id):
     Get a specific analysis result by ID.
     """
     try:
-        from backend.database import AnalysisResult
-        analysis = AnalysisResult.objects.get_or_404(id=analysis_id)
+        analysis = AnalysisResult.objects(id=analysis_id).first()
+        if not analysis:
+            return jsonify({'success': False, 'error': 'Analysis not found'}), 404
 
         return jsonify({
             'success': True,
@@ -572,7 +571,10 @@ def update_exclusion(exclusion_id):
     try:
         from backend.database import ExcludedModifier
 
-        exclusion = ExcludedModifier.objects.get_or_404(id=exclusion_id)
+        exclusion = ExcludedModifier.objects(id=exclusion_id).first()
+        if not exclusion:
+            return jsonify({'success': False, 'error': 'Exclusion not found'}), 404
+            
         data = request.json or {}
 
         if 'mod_name_pattern' in data:
@@ -647,7 +649,9 @@ def delete_custom_category(category_id):
     Delete a custom category by ID.
     """
     try:
-        category = CustomCategory.objects.get_or_404(id=category_id)
+        category = CustomCategory.objects(id=category_id).first()
+        if not category:
+            return jsonify({'success': False, 'error': 'Category not found'}), 404
         category.delete()
         return jsonify({'success': True, 'message': 'Category deleted'})
     except Exception as e:
