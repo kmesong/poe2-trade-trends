@@ -259,11 +259,19 @@ def init_db(app):
     Initialize the database connection.
     """
     mongodb_uri = app.config.get('MONGODB_URI') or app.config.get('MONGODB_SETTINGS', {}).get('host')
-    if mongodb_uri:
-        connect(host=mongodb_uri)
-    else:
-        # Default to localhost if no config found
-        connect(host='mongodb://localhost:27017/poe2_trade')
+    print(f"DEBUG: Initializing database with URI: {mongodb_uri}")
+    try:
+        if mongodb_uri:
+            connect(host=mongodb_uri)
+            print("MongoDB connected successfully.")
+        else:
+            # Default to localhost if no config found
+            connect(host='mongodb://localhost:27017/poe2_trade')
+            print("MongoDB connected to default localhost.")
+    except Exception as e:
+        print(f"CRITICAL: MongoDB connection failed: {e}")
+        import traceback
+        traceback.print_exc()
 
 
 def get_db():

@@ -1,5 +1,6 @@
 import sys
 import os
+import traceback
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -18,6 +19,7 @@ load_dotenv()
 
 # Debug logging
 print("Environment loaded.")
+print(f"DEBUG: Loaded modules: {list(sys.modules.keys())}")
 uri = os.getenv('MONGODB_URI')
 if uri:
     masked = uri.split('@')[-1] if '@' in uri else '***'
@@ -586,6 +588,9 @@ def get_analyses():
             'count': len(analyses)
         })
     except Exception as e:
+        print(f"ERROR in get_analyses: {e}")
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
