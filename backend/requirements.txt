@@ -1,7 +1,6 @@
-flask<2.3.0
-Werkzeug<3.0.0
+flask
 flask-cors
 requests
 python-dotenv
-flask-mongoengine
+mongoengine
 gunicorn
