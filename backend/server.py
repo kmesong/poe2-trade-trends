@@ -4,6 +4,12 @@ import traceback
 # Add project root to path for imports
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+try:
+    import dns
+    print("dnspython is installed")
+except ImportError:
+    print("CRITICAL: dnspython is MISSING")
+
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from dotenv import load_dotenv
