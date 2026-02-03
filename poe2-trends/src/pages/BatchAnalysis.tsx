@@ -22,6 +22,66 @@ export const BatchAnalysis: React.FC = () => {
   const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set());
   
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
+
+  // Sorting state
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({
+    key: 'gap_ex',
+    direction: 'desc'
+  });
+
+  const handleSort = (key: string) => {
+    setSortConfig(current => ({
+      key,
+      direction: current.key === key && current.direction === 'desc' ? 'asc' : 'desc'
+    }));
+  };
+
+  const sortedResults = React.useMemo(() => {
+    const sorted = [...displayedResults];
+    sorted.sort((a, b) => {
+      let aValue: number | string = 0;
+      let bValue: number | string = 0;
+
+      switch (sortConfig.key) {
+        case 'base_type':
+          aValue = a.base_type || '';
+          bValue = b.base_type || '';
+          break;
+        case 'normal_avg_ex':
+          aValue = a.normal_avg_ex || 0;
+          bValue = b.normal_avg_ex || 0;
+          break;
+        case 'crafting_avg_ex':
+          aValue = a.crafting_avg_ex || 0;
+          bValue = b.crafting_avg_ex || 0;
+          break;
+        case 'magic_avg_ex':
+          aValue = a.magic_avg_ex || 0;
+          bValue = b.magic_avg_ex || 0;
+          break;
+        case 'gap_ex':
+          aValue = a.gap_ex || 0;
+          bValue = b.gap_ex || 0;
+          break;
+        case 'roi':
+          const aNormal = a.normal_avg_ex || 0;
+          const aGap = a.gap_ex || 0;
+          aValue = aNormal > 0 ? (aGap / aNormal) : 0;
+          
+          const bNormal = b.normal_avg_ex || 0;
+          const bGap = b.gap_ex || 0;
+          bValue = bNormal > 0 ? (bGap / bNormal) : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+    return sorted;
+  }, [displayedResults, sortConfig]);
   
   // Initial load of latest data
   useEffect(() => {
@@ -334,20 +394,81 @@ export const BatchAnalysis: React.FC = () => {
               <table className="w-full text-left text-sm">
                 <thead className="bg-black/60 text-poe-golddim uppercase text-xs tracking-wider font-bold">
                   <tr>
-                    <th className="p-4 border-b border-poe-border">Base Type</th>
-                    <th className="p-4 border-b border-poe-border text-right">Normal (Ex)</th>
-                    <th className="p-4 border-b border-poe-border text-right" title="ilvl 82+, Min 2 Rune Sockets">Crafting (Ex)</th>
-                    <th className="p-4 border-b border-poe-border text-right">Magic (Ex)</th>
-                    <th className="p-4 border-b border-poe-border text-right">Gap</th>
-                    <th className="p-4 border-b border-poe-border text-right">ROI</th>
+                    <th 
+                      className="p-4 border-b border-poe-border cursor-pointer hover:text-poe-highlight transition-colors select-none"
+                      onClick={() => handleSort('base_type')}
+                    >
+                      <div className="flex items-center gap-1">
+                        Base Type
+                        {sortConfig.key === 'base_type' && (
+                          <span className="text-poe-gold">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="p-4 border-b border-poe-border text-right cursor-pointer hover:text-poe-highlight transition-colors select-none"
+                      onClick={() => handleSort('normal_avg_ex')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        Normal (Ex)
+                        {sortConfig.key === 'normal_avg_ex' && (
+                          <span className="text-poe-gold">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="p-4 border-b border-poe-border text-right cursor-pointer hover:text-poe-highlight transition-colors select-none"
+                      title="ilvl 82+, Min 2 Rune Sockets"
+                      onClick={() => handleSort('crafting_avg_ex')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        Crafting (Ex)
+                        {sortConfig.key === 'crafting_avg_ex' && (
+                          <span className="text-poe-gold">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="p-4 border-b border-poe-border text-right cursor-pointer hover:text-poe-highlight transition-colors select-none"
+                      onClick={() => handleSort('magic_avg_ex')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        Magic (Ex)
+                        {sortConfig.key === 'magic_avg_ex' && (
+                          <span className="text-poe-gold">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="p-4 border-b border-poe-border text-right cursor-pointer hover:text-poe-highlight transition-colors select-none"
+                      onClick={() => handleSort('gap_ex')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        Gap
+                        {sortConfig.key === 'gap_ex' && (
+                          <span className="text-poe-gold">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
+                    <th 
+                      className="p-4 border-b border-poe-border text-right cursor-pointer hover:text-poe-highlight transition-colors select-none"
+                      onClick={() => handleSort('roi')}
+                    >
+                      <div className="flex items-center justify-end gap-1">
+                        ROI
+                        {sortConfig.key === 'roi' && (
+                          <span className="text-poe-gold">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                        )}
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-poe-border/30 bg-poe-card/30">
-                  {displayedResults.map((row, idx) => {
-                    const normalPrice = row.normal_avg_chaos || 0;
-                    const craftingPrice = row.crafting_avg_chaos || 0;
-                    const magicPrice = row.magic_avg_chaos || 0;
-                    const gap = row.gap_chaos || 0;
+                  {sortedResults.map((row, idx) => {
+                    const normalPrice = row.normal_avg_ex || 0;
+                    const craftingPrice = row.crafting_avg_ex || 0;
+                    const magicPrice = row.magic_avg_ex || 0;
+                    const gap = row.gap_ex || 0;
                     
                     const roi = normalPrice > 0 
                       ? ((gap / normalPrice) * 100) 

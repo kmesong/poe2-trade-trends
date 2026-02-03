@@ -34,10 +34,10 @@ export interface ModifierData {
 
 export interface BatchResult {
   base_type: string;
-  normal_avg_chaos: number;
-  crafting_avg_chaos?: number;
-  magic_avg_chaos: number;
-  gap_chaos: number;
+  normal_avg_ex: number;
+  crafting_avg_ex?: number;
+  magic_avg_ex: number;
+  gap_ex: number;
   search_id?: string;
   magic_search_id?: string;
   normal_modifiers?: ModifierData[];
@@ -58,9 +58,9 @@ export interface AnalysisResultDB {
   id: number;
   base_type: string;
   created_at: string;
-  normal_avg_chaos: number;
-  magic_avg_chaos: number;
-  gap_chaos: number;
+  normal_avg_ex: number;
+  magic_avg_ex: number;
+  gap_ex: number;
   search_id: string | null;
   magic_search_id: string | null;
   modifiers: ModifierDB[];
@@ -73,7 +73,7 @@ export interface ModifierDB {
   mod_type: string;
   rarity: string;
   item_name: string | null;
-  price_chaos: number | null;
+  price_ex: number | null;
   magnitude_min: number | null;
   magnitude_max: number | null;
   mod_group: string | null;
