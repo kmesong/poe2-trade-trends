@@ -28,7 +28,10 @@ CORS(app)
 os.makedirs('instance', exist_ok=True)
 
 # Database configuration
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///poe2_trade.db'
+db_url = os.getenv('DATABASE_URL')
+if not db_url:
+    db_url = 'sqlite:///poe2_trade.db'
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 # Initialize database and create tables
