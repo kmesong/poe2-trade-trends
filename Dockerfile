@@ -10,7 +10,7 @@ COPY poe2-trends/ .
 RUN npm run build
 
 # Stage 2: Set up Python backend and serve frontend
-FROM python:3.11-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
