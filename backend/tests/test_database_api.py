@@ -69,9 +69,9 @@ def test_save_and_get_analysis(client):
     # Create analysis manually since the endpoint just reads
     analysis = AnalysisResult(
         base_type="Test Bow",
-        normal_avg_chaos=10.0,
-        magic_avg_chaos=50.0,
-        gap_chaos=40.0,
+        normal_avg_ex=10.0,
+        magic_avg_ex=50.0,
+        gap_ex=40.0,
         search_id="abc",
         magic_search_id="def"
     )
@@ -93,9 +93,9 @@ def test_save_analysis_function(client):
     mock_analyzer = MagicMock()
     mock_analyzer.analyze_gap.return_value = {
         "base_type": "Test Item",
-        "normal_avg_chaos": 10.0,
-        "magic_avg_chaos": 20.0,
-        "gap_chaos": 10.0,
+        "normal_avg_ex": 10.0,
+        "magic_avg_ex": 20.0,
+        "gap_ex": 10.0,
         "search_id": "123",
         "magic_search_id": "456",
         "normal_modifiers": [{"name": "Mod 1", "tier": "P1", "mod_type": "explicit", "rarity": "normal"}],
@@ -107,7 +107,7 @@ def test_save_analysis_function(client):
     
     # Verify result
     assert result.base_type == "Test Item"
-    assert result.gap_chaos == 10.0
+    assert result.gap_ex == 10.0
     
     # Verify modifiers were saved
     assert len(result.modifiers) == 2

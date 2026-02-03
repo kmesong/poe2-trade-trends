@@ -52,10 +52,10 @@ def test_analyze_gap_success(MockTradeAPI, mock_currency_service):
     # Gap: 0.12 - 0.06672 = 0.05328 exalts
     
     assert result["base_type"] == "Expert Dualnaught Bow"
-    assert result["normal_avg_chaos"] == pytest.approx(0.04, rel=0.1)
-    assert result["crafting_avg_chaos"] == pytest.approx(0.07, rel=0.1)
-    assert result["magic_avg_chaos"] == pytest.approx(0.12, rel=0.1)
-    assert result["gap_chaos"] == pytest.approx(0.05, rel=0.1)
+    assert result["normal_avg_ex"] == pytest.approx(0.04, rel=0.1)
+    assert result["crafting_avg_ex"] == pytest.approx(0.07, rel=0.1)
+    assert result["magic_avg_ex"] == pytest.approx(0.12, rel=0.1)
+    assert result["gap_ex"] == pytest.approx(0.05, rel=0.1)
 
 @patch("backend.price_analyzer.TradeAPI")
 def test_analyze_gap_no_results(MockTradeAPI, mock_currency_service):
@@ -65,10 +65,10 @@ def test_analyze_gap_no_results(MockTradeAPI, mock_currency_service):
     analyzer = PriceAnalyzer(currency_service=mock_currency_service)
     result = analyzer.analyze_gap("Unknown Item")
     
-    assert result["normal_avg_chaos"] == 0.0
-    assert result["crafting_avg_chaos"] == 0.0
-    assert result["magic_avg_chaos"] == 0.0
-    assert result["gap_chaos"] == 0.0
+    assert result["normal_avg_ex"] == 0.0
+    assert result["crafting_avg_ex"] == 0.0
+    assert result["magic_avg_ex"] == 0.0
+    assert result["gap_ex"] == 0.0
 
 @patch("backend.price_analyzer.TradeAPI")
 def test_analyze_gap_missing_price_info(MockTradeAPI, mock_currency_service):
@@ -83,8 +83,8 @@ def test_analyze_gap_missing_price_info(MockTradeAPI, mock_currency_service):
     analyzer = PriceAnalyzer(currency_service=mock_currency_service)
     result = analyzer.analyze_gap("Item with no price")
     
-    assert result["normal_avg_chaos"] == 0.0
-    assert result["magic_avg_chaos"] == 0.0
+    assert result["normal_avg_ex"] == 0.0
+    assert result["magic_avg_ex"] == 0.0
 
 @patch("backend.price_analyzer.TradeAPI")
 def test_calculate_average_requires_minimum_count(MockTradeAPI, mock_currency_service):
@@ -188,9 +188,9 @@ def test_analyze_gap_price_ramp(MockTradeAPI, mock_currency_service):
     # 10 chaos = 10 * 0.00556 = 0.0556 exalts
     # 15 chaos = 15 * 0.00556 = 0.0834 exalts
     # 50 chaos = 50 * 0.00556 = 0.278 exalts
-    assert result["normal_avg_chaos"] == pytest.approx(0.06, rel=0.1)
-    assert result["crafting_avg_chaos"] == pytest.approx(0.08, rel=0.1)
-    assert result["magic_avg_chaos"] == pytest.approx(0.28, rel=0.1)
+    assert result["normal_avg_ex"] == pytest.approx(0.06, rel=0.1)
+    assert result["crafting_avg_ex"] == pytest.approx(0.08, rel=0.1)
+    assert result["magic_avg_ex"] == pytest.approx(0.28, rel=0.1)
     assert mock_api.search.call_count == 4 # 1 normal + 1 craft + 2 magic attempts
 
 def test_is_t1_magic_ignores_implicits():
