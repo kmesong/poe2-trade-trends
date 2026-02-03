@@ -237,3 +237,29 @@ grep -r "import {.*CurrencyRates.*} from" src/
 # Then fix manually:
 sed -i "s/import { \(.*\), CurrencyRates } from '\.\.\/services\/currencyRates';/import { \1, type CurrencyRates } from '\.\.\/services\/currencyRates';/g" src/**/*.tsx
 ```
+
+## 9. Lessons Learned & Architecture Decisions
+
+### Database Strategy (MongoDB vs SQL)
+- **Decision**: Use MongoDB (`mongoengine`) instead of SQL (`SQLAlchemy`).
+- **Reason**: 
+  - Trade data is naturally hierarchical (Items -> Modifiers).
+  - SQL drivers in Python (especially for Turso/LibSQL) faced severe compatibility issues (`ValueError: Hrana: api error: status=308`, missing PyPI packages for Python < 3.12).
+  - MongoDB drivers (`pymongo`) are stable and widely supported.
+- **Lesson**: Avoid `flask-mongoengine` (deprecated/unmaintained). Use pure `mongoengine` with manual connection handling.
+
+### Async Processing & Timeouts
+- **Problem**: Batch analysis iterates through items with a 2-second rate limit delay. For 30 items, this takes 60s+, triggering Gunicorn's default 30s timeout (`WORKER TIMEOUT`).
+- **Solution**: 
+  1. **Job Queue**: Implemented a MongoDB-backed Job system (`Job` model).
+  2. **Background Workers**: Use `ThreadPoolExecutor` in Flask to process tasks off the main thread.
+  3. **Frontend Polling**: The UI submits a job and polls `/api/jobs/<id>` instead of waiting for a long HTTP response.
+- **Guideline**: NEVER perform loop-based or external API dependent tasks directly in a Flask request handler if they can exceed 30 seconds. Always offload to a background thread/worker.
+
+### Python Versions
+- **Constraint**: Modern drivers (like `libsql-experimental`) often require Python 3.10+.
+- **Action**: Dockerfile upgraded to `python:3.12-slim`. Always check driver compatibility before downgrading Python.
+
+### Protocol Handling (Legacy)
+- *Historical context for SQL*: If forced to use Turso/LibSQL, use `sqlite+wss://` scheme and strip trailing slashes from the URL to avoid 308 Redirect loops.
+
