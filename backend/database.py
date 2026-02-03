@@ -6,7 +6,7 @@ from datetime import datetime
 from mongoengine import (
     connect, Document, EmbeddedDocument, StringField, FloatField, 
     DateTimeField, ListField, EmbeddedDocumentField, BooleanField,
-    DictField
+    DictField, IntField
 )
 import json
 
@@ -219,6 +219,38 @@ class CustomCategory(Document):
             'id': str(self.id),
             'name': self.name,
             'items': self.items
+        }
+
+
+class Job(Document):
+    """
+    Background job for batch analysis.
+    """
+    status = StringField(default='queued')  # queued, processing, completed, failed
+    progress = IntField(default=0)
+    total = IntField(default=0)
+    current_item = StringField()
+    results = ListField(DictField())
+    error = StringField()
+    created_at = DateTimeField(default=datetime.utcnow)
+
+    meta = {
+        'indexes': [
+            '-created_at',
+            'status'
+        ]
+    }
+
+    def to_dict(self):
+        return {
+            'id': str(self.id),
+            'status': self.status,
+            'progress': self.progress,
+            'total': self.total,
+            'current_item': self.current_item,
+            'results': self.results,
+            'error': self.error,
+            'created_at': self.created_at.isoformat()
         }
 
 

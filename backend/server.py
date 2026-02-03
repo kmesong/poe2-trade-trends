@@ -11,6 +11,7 @@ import json
 import time
 import re
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor
 
 # Load environment variables
 load_dotenv()
@@ -27,11 +28,14 @@ else:
 from backend.price_analyzer import PriceAnalyzer
 from backend.database import (
     init_db, AnalysisResult, Modifier, ExcludedModifier, CustomCategory,
-    SearchHistory, save_analysis, get_excluded_mods
+    SearchHistory, save_analysis, get_excluded_mods, Job
 )
 
 app = Flask(__name__, static_folder='../../poe2-trends/dist', static_url_path='/')
 CORS(app)
+
+# Background Job Executor
+executor = ThreadPoolExecutor(max_workers=1)
 
 # Database configuration
 mongodb_uri = os.getenv('MONGODB_URI', 'mongodb://localhost:27017/poe2_trade')
@@ -39,6 +43,57 @@ app.config['MONGODB_URI'] = mongodb_uri
 
 # Initialize database
 init_db(app)
+
+def process_batch_analysis(job_id, bases, session_id, exclusions):
+    """
+    Background task to process a batch of item base analyses.
+    """
+    with app.app_context():
+        job = Job.objects(id=job_id).first()
+        if not job:
+            print(f"Job {job_id} not found")
+            return
+
+        try:
+            job.status = 'processing'
+            job.save()
+
+            analyzer = PriceAnalyzer()
+            
+            for base in bases:
+                job.current_item = base
+                job.save()
+                
+                print(f"Job {job_id}: Analyzing {base}...")
+                try:
+                    analysis = save_analysis(
+                        analyzer=analyzer,
+                        base_type=base,
+                        session_id=session_id,
+                        excluded_mods=exclusions
+                    )
+                    job.results.append(analysis.to_dict())
+                except Exception as e:
+                    print(f"Job {job_id}: Error analyzing {base}: {e}")
+                    job.results.append({"base_type": base, "error": str(e)})
+
+                job.progress += 1
+                job.save()
+                
+                if job.progress < len(bases):
+                    time.sleep(2) # Rate limit politeness
+
+            job.status = 'completed'
+            job.current_item = None
+            job.save()
+            print(f"Job {job_id} completed successfully")
+
+        except Exception as e:
+            print(f"Job {job_id} failed: {e}")
+            job.status = 'failed'
+            job.error = str(e)
+            job.save()
+
 
 @app.route('/')
 def index():
@@ -385,7 +440,64 @@ def batch_price_analysis():
         
     return jsonify(results)
 
+
+@app.route('/api/jobs/batch-analysis', methods=['POST'])
+def create_batch_job():
+    """
+    Create a new background job for batch analysis.
+    """
+    session_id = get_session_id()
+    if not session_id:
+        return jsonify({"error": "Session ID required"}), 401
+    
+    data = request.json
+    if not data or 'bases' not in data:
+        return jsonify({"error": "No bases provided"}), 400
+        
+    bases = data.get("bases", [])
+    
+    # Get active exclusions
+    exclusions = get_excluded_mods()
+    
+    # Create job document
+    job = Job(
+        total=len(bases),
+        status='queued'
+    )
+    job.save()
+    
+    # Submit to executor
+    executor.submit(
+        process_batch_analysis, 
+        str(job.id), 
+        bases, 
+        session_id, 
+        [e.to_dict() for e in exclusions] # Pass as dicts for safety
+    )
+    
+    return jsonify({
+        "success": True,
+        "job_id": str(job.id)
+    })
+
+
+@app.route('/api/jobs/<job_id>', methods=['GET'])
+def get_job_status(job_id):
+    """
+    Get the status of a background job.
+    """
+    try:
+        job = Job.objects(id=job_id).first()
+        if not job:
+            return jsonify({"error": "Job not found"}), 404
+            
+        return jsonify(job.to_dict())
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
 # Currency rates endpoint - fetch from poe.ninja
+
 @app.route('/api/currency/rates', methods=['GET'])
 def get_currency_rates():
     """
