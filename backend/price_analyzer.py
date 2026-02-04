@@ -441,6 +441,72 @@ class PriceAnalyzer:
             print(f"Error calculating average with count: {e}")
             return 0.0, [], reviewed_count
 
+    def _extract_all_modifiers(self, item):
+        """
+        Extract ALL modifiers from an item (for distribution analysis).
+        Returns list of modifier objects with display text.
+        """
+        modifiers = []
+        item_data = item.get("item", {})
+
+        # Handle cases where item_data might be a list or non-dict
+        if not isinstance(item_data, dict):
+            return []
+
+        rarity = item_data.get("rarity", "unknown")
+        item_name = item_data.get("name", "")
+
+        extended = item_data.get("extended", {})
+        if not isinstance(extended, dict):
+            return []
+
+        mods = extended.get("mods", {})
+        if not isinstance(mods, dict):
+            return []
+
+        target_groups = ["explicit", "implicit", "fractured", "desecrated"]
+
+        for group in target_groups:
+            group_mods = mods.get(group, [])
+            if not isinstance(group_mods, list):
+                continue
+
+            for mod in group_mods:
+                tier = mod.get("tier", "")
+
+                # Get display text
+                display_text = mod.get("text", "").strip()
+
+                if not display_text:
+                    magnitudes = mod.get("magnitudes", [])
+
+                    if magnitudes and isinstance(magnitudes, list) and len(magnitudes) > 0:
+                        mag = magnitudes[0]
+                        if isinstance(mag, dict):
+                            min_val = mag.get("min")
+                            max_val = mag.get("max")
+
+                            if min_val is not None and max_val is not None:
+                                display_text = f"{min_val} to {max_val}"
+                            elif min_val is not None:
+                                display_text = str(min_val)
+                            elif max_val is not None:
+                                display_text = str(max_val)
+
+                if not display_text:
+                    display_text = mod.get("name", "Unknown Modifier")
+
+                modifiers.append({
+                    "name": mod.get("name", ""),
+                    "tier": tier,
+                    "mod_type": group,
+                    "rarity": rarity,
+                    "item_name": item_name,
+                    "display_text": display_text
+                })
+
+        return modifiers
+
     def _extract_attributes(self, item):
         """
         Helper to capture non-mod data (ilvl, sockets, etc.) plus explicit modifiers.
@@ -585,11 +651,11 @@ class PriceAnalyzer:
 
             if search_total > 0:
                 # Fetch a sample to get attributes and average price in this bucket
-                # Use _extract_attributes to get stats
+                # Use _extract_all_modifiers to get ALL stats (not just T1)
                 avg_val, common_stats, reviewed_count = self._calculate_average_with_count(
                     api, result,
                     target_count=100,  # Sample 100 items per bucket for comprehensive statistics
-                    extractor_func=self._extract_attributes
+                    extractor_func=self._extract_all_modifiers
                 )
 
             buckets_data.append({
