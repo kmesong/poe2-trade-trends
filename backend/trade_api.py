@@ -56,12 +56,19 @@ class TradeAPI:
         import urllib.parse
         encoded_league = urllib.parse.quote(league)
         url = f"{self.SEARCH_URL_BASE}{encoded_league}"
+        
+        # Ensure sort is not inside query (common mistake in client code)
+        sort = query.pop("sort", {"price": "asc"})
+        
         payload = {
             "query": query,
-            "sort": {"price": "asc"}
+            "sort": sort
         }
         response = self._request("POST", url, json=payload)
-        return response
+        
+        if isinstance(response, list):
+            return {"result": response, "total": len(response)}
+        return response or {}
 
     def fetch(self, ids, query_id=None):
         if not ids:
@@ -73,4 +80,8 @@ class TradeAPI:
         if query_id:
             params["query"] = query_id
             
-        return self._request("GET", url, params=params)
+        response = self._request("GET", url, params=params)
+        
+        if isinstance(response, list):
+            return {"result": response}
+        return response or {"result": []}
