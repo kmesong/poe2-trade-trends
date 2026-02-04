@@ -588,7 +588,7 @@ class PriceAnalyzer:
                 # Use _extract_attributes to get stats
                 avg_val, common_stats, reviewed_count = self._calculate_average_with_count(
                     api, result,
-                    target_count=10,  # Sample 10 items per bucket for better statistics
+                    target_count=100,  # Sample 100 items per bucket for comprehensive statistics
                     extractor_func=self._extract_attributes
                 )
 
