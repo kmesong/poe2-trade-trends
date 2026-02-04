@@ -175,7 +175,10 @@ class PriceAnalyzer:
     def _get_search_result(self, api, query):
         """Execute search and return full result (includes search ID)."""
         try:
-            return api.search(query)
+            result = api.search(query)
+            if isinstance(result, list):
+                return {"result": result, "total": len(result)}
+            return result or {}
         except Exception as e:
             error_msg = str(e)
             if "502" in error_msg or "Bad Gateway" in error_msg:
@@ -192,11 +195,15 @@ class PriceAnalyzer:
         Returns tuple of (average_price, modifiers_list).
         """
         try:
-            all_ids = search_result.get("result", [])[:100]
+            if isinstance(search_result, list):
+                all_ids = search_result[:100]
+            else:
+                all_ids = search_result.get("result", [])[:100]
+                
             if not all_ids:
                 return 0.0, []
                 
-            query_id = search_result.get("id")
+            query_id = search_result.get("id") if isinstance(search_result, dict) else None
             prices = []
             modifiers = []
             i = 0  # Initialize for potential sleep check
@@ -211,9 +218,16 @@ class PriceAnalyzer:
                     
                 batch_ids = all_ids[i:i+10]
                 fetch_results = api.fetch(batch_ids, query_id=query_id)
-                items = fetch_results.get("result", [])
+                
+                if isinstance(fetch_results, list):
+                    items = fetch_results
+                else:
+                    items = fetch_results.get("result", [])
                 
                 for item in items:
+                    if not isinstance(item, dict):
+                        continue
+                        
                     # Extract modifiers/attributes from this item
                     item_mods = extract_func(item)
                     if item_mods:
@@ -376,21 +390,14 @@ class PriceAnalyzer:
         api = TradeAPI(session_id)
         
         # Base query for all searches
+        # Using 'term' instead of 'type' to handle both base types and unique names gracefully
         base_query = {
             "status": {"option": "securable"},
-            "type": base_type,
-            "filters": {
-                "type_filters": {
-                    "filters": {
-                        # "rarity": {"option": "nonunique"} # Optional: filter uniques?
-                    }
-                }
-            }
+            "term": base_type
         }
         
         # 1. Find Min Price (sort price asc, fetch top 5)
         min_query = copy.deepcopy(base_query)
-        min_query["sort"] = {"price": "asc"}
         min_result = self._get_search_result(api, min_query)
         min_price, _ = self._calculate_average_from_result(api, min_result, target_count=5)
         
@@ -409,15 +416,19 @@ class PriceAnalyzer:
         if max_price > min_price:
             interval = (max_price - min_price) / num_buckets
         else:
-            interval = 1.0 # Default if no spread
+            interval = 0.1 # Default small spread if no variation found
             
         for i in range(num_buckets):
             b_min = min_price + (i * interval)
             b_max = min_price + ((i + 1) * interval)
             
             # Avoid tiny overlaps or floating point issues
-            if i == num_buckets - 1:
-                b_max = max_price * 1.01 # Ensure we catch the top
+            if i == num_buckets - 1 and max_price > 0:
+                b_max = max(b_max, max_price * 1.01)
+                
+            # Final safety check for price range validity
+            if b_max <= b_min:
+                b_max = b_min + 0.01
                 
             bucket_query = copy.deepcopy(base_query)
             if "filters" not in bucket_query: bucket_query["filters"] = {}
@@ -429,9 +440,7 @@ class PriceAnalyzer:
             bucket_query["filters"]["trade_filters"]["filters"]["price"] = {
                 "min": b_min,
                 "max": b_max,
-                "option": "exalted" # Normalize to exalted for filter? Or just rely on default?
-                # Usually we want to search in chaos or exalted. 
-                # If we assume prices are normalized to Exalted, we should filter in Exalted.
+                "option": "exalted"
             }
             
             # Execute search for bucket
@@ -605,11 +614,15 @@ class PriceAnalyzer:
                 query["filters"]["trade_filters"]["filters"]["price"]["min"] = min_price_filter
 
             search_results = api.search(query)
-            all_ids = search_results.get("result", [])[:100]  # Get up to 100 IDs
+            if isinstance(search_results, list):
+                all_ids = search_results[:100]
+            else:
+                all_ids = search_results.get("result", [])[:100]  # Get up to 100 IDs
+                
             if not all_ids:
                 return 0.0
                 
-            query_id = search_results.get("id")
+            query_id = search_results.get("id") if isinstance(search_results, dict) else None
             prices = []
             
             # Process in batches of 10
@@ -619,9 +632,16 @@ class PriceAnalyzer:
                     
                 batch_ids = all_ids[i:i+10]
                 fetch_results = api.fetch(batch_ids, query_id=query_id)
-                items = fetch_results.get("result", [])
+                
+                if isinstance(fetch_results, list):
+                    items = fetch_results
+                else:
+                    items = fetch_results.get("result", [])
                 
                 for item in items:
+                    if not isinstance(item, dict):
+                        continue
+                        
                     if item_validator and not item_validator(item):
                         continue
                         
