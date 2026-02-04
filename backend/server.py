@@ -702,6 +702,33 @@ def get_analyses():
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
+@app.route('/api/db/item-analyses', methods=['GET'])
+def get_item_analyses_endpoint():
+    """
+    Get saved deep dive distribution analysis results.
+    Query params:
+        - base_type: Filter by item type
+        - limit: Maximum results (default 100)
+    """
+    try:
+        base_type = request.args.get('base_type')
+        limit = int(request.args.get('limit', 100))
+
+        from backend.database import get_item_analyses
+        analyses = get_item_analyses(base_type=base_type, limit=limit)
+
+        return jsonify({
+            'success': True,
+            'data': [a.to_dict() for a in analyses],
+            'count': len(analyses)
+        })
+    except Exception as e:
+        print(f"ERROR in get_item_analyses_endpoint: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
 @app.route('/api/db/analyses/<string:analysis_id>', methods=['GET'])
 def get_analysis(analysis_id):
     """

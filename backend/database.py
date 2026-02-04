@@ -427,6 +427,17 @@ def add_excluded_mod(name_pattern: str = None, tier: str = None,
     return exclusion
 
 
+def get_item_analyses(base_type: str = None, limit: int = 100) -> list:
+    """
+    Get deep dive distribution analysis results from MongoDB.
+    """
+    query = ItemAnalysis.objects
+    if base_type:
+        query = query.filter(base_type=base_type)
+
+    return query.order_by('-created_at').limit(limit)
+
+
 def get_excluded_mods() -> list:
     """
     Get all active excluded modifier rules.

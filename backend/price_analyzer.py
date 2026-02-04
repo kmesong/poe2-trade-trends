@@ -426,13 +426,13 @@ class PriceAnalyzer:
         # 1. Find Min Price (sort price asc, fetch top 5)
         min_query = copy.deepcopy(base_query)
         min_result = self._get_search_result(api, min_query)
-        min_price, _ = self._calculate_average_from_result(api, min_result, target_count=5)
+        min_price, _ = self._calculate_average_from_result(api, min_result, target_count=1)
         
         # 2. Find Max Price (sort price desc, fetch top 5)
         max_query = copy.deepcopy(base_query)
         max_query["sort"] = {"price": "desc"}
         max_result = self._get_search_result(api, max_query)
-        max_price, _ = self._calculate_average_from_result(api, max_result, target_count=5)
+        max_price, _ = self._calculate_average_from_result(api, max_result, target_count=1)
         
         # Ensure valid range
         if max_price < min_price:
@@ -482,7 +482,7 @@ class PriceAnalyzer:
                 # Use _extract_attributes to get stats
                 avg_val, common_stats = self._calculate_average_from_result(
                     api, result, 
-                    target_count=5, # Sample 5 items
+                    target_count=1, # Sample at least 1 item
                     extractor_func=self._extract_attributes
                 )
             

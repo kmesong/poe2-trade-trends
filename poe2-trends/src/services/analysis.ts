@@ -31,7 +31,7 @@ export const getAnalysisStatus = async (jobId: string): Promise<JobResponse> => 
 
 export const getDistributionResults = async (baseType: string): Promise<ItemAnalysis[]> => {
   const params = new URLSearchParams({ base_type: baseType });
-  const response = await fetch(`/api/db/analyses?${params.toString()}`);
+  const response = await fetch(`/api/db/item-analyses?${params.toString()}`);
 
   if (!response.ok) {
     const errorData = await response.json();
