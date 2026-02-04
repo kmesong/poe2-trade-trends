@@ -478,11 +478,15 @@ class PriceAnalyzer:
 
         # Basic Item Attributes (ALWAYS include these)
         # Rarity
-        add_prop("Rarity", rarity)
+        rarity_val = item_data.get("rarity", "unknown")
+        print(f"DEBUG EXTRACT: rarity={rarity_val}")
+        add_prop("Rarity", rarity_val)
 
         # Item Level
-        if "ilvl" in item_data:
-            add_prop("Item Level", item_data["ilvl"])
+        ilvl = item_data.get("ilvl", None)
+        print(f"DEBUG EXTRACT: ilvl={ilvl}")
+        if ilvl is not None:
+            add_prop("Item Level", ilvl)
 
         # Quality
         properties = item_data.get("properties", [])
@@ -728,6 +732,8 @@ class PriceAnalyzer:
                 "avg_price": round(avg_val, 2),
                 "common_stats": common_stats
             })
+            
+            print(f"DEBUG BUCKET SAVED: min={b_min}, max={b_max}, count={reviewed_count}, avg={avg_val}, stats_count={len(common_stats)}")
             
             # Rate limit protection between buckets
             time.sleep(2)
