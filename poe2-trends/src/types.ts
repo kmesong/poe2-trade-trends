@@ -95,7 +95,7 @@ export interface JobResponse {
 export interface Bucket {
   price_range: string;
   min_price: number;
-  max_price: number;
+  max_price: number | null;
   count: number;
   avg_price: number;
   attributes: Record<string, number>;

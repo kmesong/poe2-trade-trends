@@ -487,7 +487,7 @@ class PriceAnalyzer:
             
             buckets_data.append({
                 "min": round(b_min, 2),
-                "max": round(b_max, 2) if b_max is not None else "1000+",
+                "max": round(b_max, 2) if b_max is not None else None,
                 "count": total,
                 "avg_price": round(avg_val, 2),
                 "common_stats": common_stats
