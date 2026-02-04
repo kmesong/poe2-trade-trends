@@ -104,6 +104,58 @@ class AnalysisResult(Document):
         }
 
 
+class Bucket(EmbeddedDocument):
+    """
+    Represents a price bucket in the distribution analysis.
+    """
+    price_range = StringField()
+    min_price = FloatField()
+    max_price = FloatField()
+    count = IntField()
+    avg_price = FloatField()
+    attributes = DictField()  # {"Attribute Name": frequency_count}
+
+    def to_dict(self):
+        return {
+            'price_range': self.price_range,
+            'min_price': self.min_price,
+            'max_price': self.max_price,
+            'count': self.count,
+            'avg_price': self.avg_price,
+            'attributes': self.attributes
+        }
+
+
+class ItemAnalysis(Document):
+    """
+    Stores deep dive distribution analysis for an item.
+    """
+    base_type = StringField(required=True)
+    created_at = DateTimeField(default=datetime.utcnow)
+    min_price = FloatField()
+    max_price = FloatField()
+    currency = StringField(default="exalted")
+    buckets = ListField(EmbeddedDocumentField(Bucket))
+
+    meta = {
+        'indexes': [
+            'base_type',
+            '-created_at'
+        ]
+    }
+
+    def to_dict(self):
+        return {
+            'id': str(self.id),
+            'base_type': self.base_type,
+            'created_at': self.created_at.isoformat(),
+            'min_price': self.min_price,
+            'max_price': self.max_price,
+            'currency': self.currency,
+            'buckets': [b.to_dict() for b in self.buckets]
+        }
+
+
 class ExcludedModifier(Document):
     """
     User preferences for modifiers to exclude from analysis.

@@ -210,3 +210,69 @@ def test_is_t1_magic_ignores_implicits():
     
     assert analyzer._is_t1_magic(mock_item) is True
 
+@patch("backend.price_analyzer.TradeAPI")
+@patch("time.sleep") # speed up test
+def test_analyze_distribution(mock_sleep, MockTradeAPI, mock_currency_service):
+    # Setup
+    mock_api = MockTradeAPI.return_value
+    analyzer = PriceAnalyzer(currency_service=mock_currency_service)
+    
+    # We want 2 buckets for simplicity
+    # searches: 1. min, 2. max, 3. bucket1, 4. bucket2
+    mock_api.search.side_effect = [
+        {"result": [f"min{i}" for i in range(5)], "id": "s_min", "total": 5},
+        {"result": [f"max{i}" for i in range(5)], "id": "s_max", "total": 5},
+        {"result": [f"b1_{i}" for i in range(5)], "id": "s_b1", "total": 10},
+        {"result": [f"b2_{i}" for i in range(5)], "id": "s_b2", "total": 5},
+    ]
+    
+    # fetch results
+    # 1. min items (price 10)
+    # 2. max items (price 110)
+    # 3. bucket1 items (price 30) + stats
+    # 4. bucket2 items (price 90) + stats
+    
+    def make_item(price, ilvl):
+        return {
+            "listing": {"price": {"amount": price, "currency": "chaos"}},
+            "item": {
+                "ilvl": ilvl, 
+                "extended": {"mods": {"explicit": [{"name": "Mod", "tier": "P1"}]}}
+            }
+        }
+    
+    mock_api.fetch.side_effect = [
+        {"result": [make_item(10, 80) for _ in range(5)]}, # min
+        {"result": [make_item(110, 85) for _ in range(5)]}, # max
+        {"result": [make_item(30, 82) for _ in range(5)]}, # bucket 1
+        {"result": [make_item(90, 84) for _ in range(5)]}, # bucket 2
+    ]
+    
+    # Act
+    result = analyzer.analyze_distribution("Test Item", num_buckets=2)
+    
+    # Assert
+    # Min price: 10 chaos * 0.00556 = 0.0556
+    # Max price: 110 chaos * 0.00556 = 0.6116
+    assert result["base_type"] == "Test Item"
+    assert result["min_price"] == pytest.approx(0.06, rel=0.1)
+    assert result["max_price"] == pytest.approx(0.61, rel=0.1)
+    
+    buckets = result["buckets"]
+    assert len(buckets) == 2
+    
+    # Bucket 1
+    assert buckets[0]["count"] == 10
+    assert buckets[0]["avg_price"] == pytest.approx(30 * 0.00556, rel=0.1)
+    stats1 = buckets[0]["common_stats"]
+    # Check if attributes extracted
+    ilvls = [s for s in stats1 if s["name"] == "Item Level"]
+    assert len(ilvls) > 0
+    assert ilvls[0]["display_text"] == "82"
+    
+    # Bucket 2
+    assert buckets[1]["count"] == 5
+    assert buckets[1]["avg_price"] == pytest.approx(90 * 0.00556, rel=0.1)
+
+
+

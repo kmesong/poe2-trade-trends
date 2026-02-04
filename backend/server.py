@@ -36,7 +36,8 @@ else:
 from backend.price_analyzer import PriceAnalyzer
 from backend.database import (
     init_db, AnalysisResult, Modifier, ExcludedModifier, CustomCategory,
-    SearchHistory, save_analysis, get_excluded_mods, Job
+    SearchHistory, save_analysis, get_excluded_mods, Job,
+    ItemAnalysis, Bucket
 )
 
 app = Flask(__name__, static_folder='../../poe2-trends/dist', static_url_path='/')
@@ -98,6 +99,70 @@ def process_batch_analysis(job_id, bases, session_id, exclusions):
 
         except Exception as e:
             print(f"Job {job_id} failed: {e}")
+            job.status = 'failed'
+            job.error = str(e)
+            job.save()
+
+
+def process_distribution_analysis(job_id, base_type, session_id):
+    """
+    Background task to process item distribution analysis.
+    """
+    with app.app_context():
+        job = Job.objects(id=job_id).first()
+        if not job:
+            print(f"Job {job_id} not found")
+            return
+
+        try:
+            job.status = 'processing'
+            job.save()
+
+            print(f"Job {job_id}: Analyzing distribution for {base_type}...")
+            analyzer = PriceAnalyzer()
+            dist_result = analyzer.analyze_distribution(base_type, session_id)
+            
+            # Create Bucket objects
+            buckets = []
+            for b in dist_result['buckets']:
+                # Convert common_stats to attributes frequency map
+                # Since _calculate_average_from_result deduplicates, counts will be 1
+                # but we still follow the expected schema
+                attrs = {}
+                for stat in b.get('common_stats', []):
+                    name = stat.get('name') or stat.get('display_text')
+                    if name:
+                        attrs[name] = attrs.get(name, 0) + 1
+                
+                bucket = Bucket(
+                    price_range=f"{b['min']} - {b['max']}",
+                    min_price=float(b['min']),
+                    max_price=float(b['max']),
+                    count=int(b['count']),
+                    avg_price=float(b['avg_price']),
+                    attributes=attrs
+                )
+                buckets.append(bucket)
+            
+            # Save to ItemAnalysis
+            analysis = ItemAnalysis(
+                base_type=base_type,
+                min_price=float(dist_result['min_price']),
+                max_price=float(dist_result['max_price']),
+                currency="exalted",
+                buckets=buckets
+            )
+            analysis.save()
+            
+            # Update Job
+            job.results = [analysis.to_dict()]
+            job.status = 'completed'
+            job.save()
+            print(f"Job {job_id} completed successfully")
+
+        except Exception as e:
+            print(f"Job {job_id} failed: {e}")
+            traceback.print_exc()
             job.status = 'failed'
             job.error = str(e)
             job.save()
@@ -481,6 +546,43 @@ def create_batch_job():
         bases, 
         session_id, 
         [e.to_dict() for e in exclusions] # Pass as dicts for safety
+    )
+    
+    return jsonify({
+        "success": True,
+        "job_id": str(job.id)
+    })
+
+
+@app.route('/api/analyze/distribution', methods=['POST'])
+def analyze_distribution_job():
+    """
+    Create a new background job for distribution analysis.
+    """
+    session_id = get_session_id()
+    if not session_id:
+        return jsonify({"error": "Session ID required"}), 401
+    
+    data = request.json
+    if not data or 'base_type' not in data:
+        return jsonify({"error": "No base_type provided"}), 400
+        
+    base_type = data.get("base_type")
+    
+    # Create job document
+    job = Job(
+        total=1,
+        status='queued',
+        current_item=base_type
+    )
+    job.save()
+    
+    # Submit to executor
+    executor.submit(
+        process_distribution_analysis, 
+        str(job.id), 
+        base_type, 
+        session_id
     )
     
     return jsonify({

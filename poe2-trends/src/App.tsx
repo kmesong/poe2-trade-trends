@@ -3,6 +3,7 @@ import { Sidebar } from './components/Sidebar';
 import { DashboardGrid } from './components/DashboardGrid';
 import { Settings } from './pages/Settings';
 import { BatchAnalysis } from './pages/BatchAnalysis';
+import { ItemAnalysis } from './pages/ItemAnalysis';
 import { Routes, Route } from 'react-router-dom';
 import type { Data, WeaponData } from './types';
 import { Toaster } from 'react-hot-toast';
@@ -71,6 +72,7 @@ function App() {
           } />
           <Route path="/settings" element={<Settings />} />
           <Route path="/batch-analysis" element={<BatchAnalysis />} />
+          <Route path="/item-analysis" element={<ItemAnalysis />} />
         </Routes>
       </main>
       <Toaster 

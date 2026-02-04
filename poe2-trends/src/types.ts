@@ -87,7 +87,25 @@ export interface JobResponse {
   progress: number;
   total: number;
   current_item: string | null;
-  results: BatchResult[];
+  results: BatchResult[] | ItemAnalysis[];
   error: string | null;
   created_at: string;
+}
+
+export interface Bucket {
+  price_range: string;
+  min_price: number;
+  max_price: number;
+  count: number;
+  avg_price: number;
+  attributes: Record<string, number>;
+}
+
+export interface ItemAnalysis {
+  id: string;
+  base_type: string;
+  created_at: string;
+  min_price: number;
+  max_price: number;
+  buckets: Bucket[];
 }

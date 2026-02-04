@@ -239,6 +239,13 @@ export const Sidebar: React.FC<Props> = ({ data, activeType, onSelect, onDataRef
       <div className="p-0 border-t border-poe-border bg-poe-card shrink-0 flex flex-col">
         <div className="flex flex-col">
             <Link 
+                to="/item-analysis" 
+                className={`px-6 py-3 text-sm flex items-center gap-2 border-b border-poe-border/30 transition-colors
+                  ${location.pathname === '/item-analysis' ? 'text-poe-gold bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+            >
+                <span>🔍</span> Item Analysis
+            </Link>
+            <Link 
                 to="/batch-analysis" 
                 className={`px-6 py-3 text-sm flex items-center gap-2 border-b border-poe-border/30 transition-colors
                   ${location.pathname === '/batch-analysis' ? 'text-poe-gold bg-white/5' : 'text-gray-400 hover:text-white hover:bg-white/5'}`}

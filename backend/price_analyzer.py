@@ -186,7 +186,7 @@ class PriceAnalyzer:
                 print(f"Error searching: {e}")
             return {}
 
-    def _calculate_average_from_result(self, api, search_result, item_validator=None, target_count=5, max_items_to_check=100, exclusions=None, min_mod_count=0):
+    def _calculate_average_from_result(self, api, search_result, item_validator=None, target_count=5, max_items_to_check=100, exclusions=None, min_mod_count=0, extractor_func=None):
         """
         Calculate average price and collect modifier data from a search result.
         Returns tuple of (average_price, modifiers_list).
@@ -201,6 +201,9 @@ class PriceAnalyzer:
             modifiers = []
             i = 0  # Initialize for potential sleep check
             
+            # Use provided extractor or default to _extract_modifiers
+            extract_func = extractor_func or self._extract_modifiers
+            
             # Process in batches of 10
             for i in range(0, min(len(all_ids), max_items_to_check), 10):
                 if len(prices) >= target_count:
@@ -211,8 +214,8 @@ class PriceAnalyzer:
                 items = fetch_results.get("result", [])
                 
                 for item in items:
-                    # Extract modifiers from this item
-                    item_mods = self._extract_modifiers(item)
+                    # Extract modifiers/attributes from this item
+                    item_mods = extract_func(item)
                     if item_mods:
                         # Filter exclusions
                         if exclusions:
@@ -294,6 +297,177 @@ class PriceAnalyzer:
         except Exception as e:
             print(f"Error calculating average: {e}")
             return 0.0, []
+
+    def _extract_attributes(self, item):
+        """
+        Helper to capture non-mod data (ilvl, sockets, etc.) plus explicit modifiers.
+        Returns a list of modifier-like dictionaries.
+        """
+        # Start with standard modifiers
+        mods = self._extract_modifiers(item)
+        
+        item_data = item.get("item", {})
+        rarity = item_data.get("rarity", "unknown")
+        item_name = item_data.get("name", "")
+        
+        def add_prop(name, value, p_type="property"):
+            mods.append({
+                "name": name,
+                "tier": "",
+                "mod_type": p_type,
+                "rarity": rarity,
+                "item_name": item_name,
+                "display_text": str(value),
+                "magnitude_min": None,
+                "magnitude_max": None
+            })
+
+        # ILVL
+        if "ilvl" in item_data:
+            add_prop("Item Level", item_data["ilvl"])
+            
+        # Rarity
+        if "rarity" in item_data:
+            add_prop("Rarity", item_data["rarity"])
+            
+        # Sockets & Links
+        sockets = item_data.get("sockets", [])
+        if sockets:
+            add_prop("Sockets", len(sockets))
+            
+            # Calculate max links
+            groups = {}
+            for s in sockets:
+                g = s.get("group", 0)
+                groups[g] = groups.get(g, 0) + 1
+            max_links = max(groups.values()) if groups else 0
+            add_prop("Links", max_links)
+            
+        # Flags
+        if item_data.get("corrupted"):
+            add_prop("Corrupted", "Yes")
+        if item_data.get("identified"):
+            add_prop("Identified", "Yes")
+        if item_data.get("mirrored"):
+            add_prop("Mirrored", "Yes")
+            
+        # Quality
+        properties = item_data.get("properties", [])
+        for prop in properties:
+            if prop.get("name") == "Quality":
+                values = prop.get("values", [])
+                if values and len(values) > 0:
+                    # value is usually ["+20%", 1]
+                    add_prop("Quality", values[0][0])
+                    
+        # Prefixes/Suffixes count
+        extended = item_data.get("extended", {})
+        if "prefixes" in extended:
+            add_prop("Prefix Count", extended["prefixes"], "stat")
+        if "suffixes" in extended:
+            add_prop("Suffix Count", extended["suffixes"], "stat")
+            
+        return mods
+
+    def analyze_distribution(self, base_type, session_id=None, num_buckets=10):
+        """
+        Analyzes the price distribution of a base item type.
+        """
+        api = TradeAPI(session_id)
+        
+        # Base query for all searches
+        base_query = {
+            "status": {"option": "securable"},
+            "type": base_type,
+            "filters": {
+                "type_filters": {
+                    "filters": {
+                        # "rarity": {"option": "nonunique"} # Optional: filter uniques?
+                    }
+                }
+            }
+        }
+        
+        # 1. Find Min Price (sort price asc, fetch top 5)
+        min_query = copy.deepcopy(base_query)
+        min_query["sort"] = {"price": "asc"}
+        min_result = self._get_search_result(api, min_query)
+        min_price, _ = self._calculate_average_from_result(api, min_result, target_count=5)
+        
+        # 2. Find Max Price (sort price desc, fetch top 5)
+        max_query = copy.deepcopy(base_query)
+        max_query["sort"] = {"price": "desc"}
+        max_result = self._get_search_result(api, max_query)
+        max_price, _ = self._calculate_average_from_result(api, max_result, target_count=5)
+        
+        # Ensure valid range
+        if max_price < min_price:
+            max_price = min_price
+        
+        # 3. Create Buckets
+        buckets_data = []
+        if max_price > min_price:
+            interval = (max_price - min_price) / num_buckets
+        else:
+            interval = 1.0 # Default if no spread
+            
+        for i in range(num_buckets):
+            b_min = min_price + (i * interval)
+            b_max = min_price + ((i + 1) * interval)
+            
+            # Avoid tiny overlaps or floating point issues
+            if i == num_buckets - 1:
+                b_max = max_price * 1.01 # Ensure we catch the top
+                
+            bucket_query = copy.deepcopy(base_query)
+            if "filters" not in bucket_query: bucket_query["filters"] = {}
+            if "trade_filters" not in bucket_query["filters"]:
+                bucket_query["filters"]["trade_filters"] = {}
+            if "filters" not in bucket_query["filters"]["trade_filters"]:
+                bucket_query["filters"]["trade_filters"]["filters"] = {}
+                
+            bucket_query["filters"]["trade_filters"]["filters"]["price"] = {
+                "min": b_min,
+                "max": b_max,
+                "option": "exalted" # Normalize to exalted for filter? Or just rely on default?
+                # Usually we want to search in chaos or exalted. 
+                # If we assume prices are normalized to Exalted, we should filter in Exalted.
+            }
+            
+            # Execute search for bucket
+            result = self._get_search_result(api, bucket_query)
+            total = result.get("total", 0)
+            
+            avg_val = 0.0
+            common_stats = []
+            
+            if total > 0:
+                # Fetch a sample to get attributes and average price in this bucket
+                # Use _extract_attributes to get stats
+                avg_val, common_stats = self._calculate_average_from_result(
+                    api, result, 
+                    target_count=5, # Sample 5 items
+                    extractor_func=self._extract_attributes
+                )
+            
+            buckets_data.append({
+                "min": round(b_min, 2),
+                "max": round(b_max, 2),
+                "count": total,
+                "avg_price": round(avg_val, 2),
+                "common_stats": common_stats
+            })
+            
+            # Rate limit protection between buckets
+            time.sleep(2)
+            
+        return {
+            "base_type": base_type,
+            "min_price": round(min_price, 2),
+            "max_price": round(max_price, 2),
+            "buckets": buckets_data
+        }
+
 
     def _extract_modifiers(self, item):
         """
