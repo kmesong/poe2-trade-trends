@@ -150,8 +150,17 @@ class PriceAnalyzer:
         """
         # item_entry is the raw result from fetch()
         item = item_entry.get("item", {})
-        mods = item.get("extended", {}).get("mods", {})
-        
+        if not isinstance(item, dict):
+            return False
+            
+        extended = item.get("extended", {})
+        if not isinstance(extended, dict):
+            return False
+            
+        mods = extended.get("mods", {})
+        if not isinstance(mods, dict):
+            return False
+            
         has_any_mod = False
         target_groups = ["explicit", "fractured", "desecrated"]
         
@@ -335,6 +344,9 @@ class PriceAnalyzer:
         mods = self._extract_modifiers(item)
         
         item_data = item.get("item", {})
+        if not isinstance(item_data, dict):
+            return mods
+            
         rarity = item_data.get("rarity", "unknown")
         item_name = item_data.get("name", "")
         
@@ -390,10 +402,11 @@ class PriceAnalyzer:
                     
         # Prefixes/Suffixes count
         extended = item_data.get("extended", {})
-        if "prefixes" in extended:
-            add_prop("Prefix Count", extended["prefixes"], "stat")
-        if "suffixes" in extended:
-            add_prop("Suffix Count", extended["suffixes"], "stat")
+        if isinstance(extended, dict):
+            if "prefixes" in extended:
+                add_prop("Prefix Count", extended["prefixes"], "stat")
+            if "suffixes" in extended:
+                add_prop("Suffix Count", extended["suffixes"], "stat")
             
         return mods
 
@@ -499,10 +512,22 @@ class PriceAnalyzer:
         """
         modifiers = []
         item_data = item.get("item", {})
+        
+        # Handle cases where item_data might be a list or non-dict (malformed API response)
+        if not isinstance(item_data, dict):
+            return []
+            
         rarity = item_data.get("rarity", "unknown")
         item_name = item_data.get("name", "")
         
-        mods = item_data.get("extended", {}).get("mods", {})
+        extended = item_data.get("extended", {})
+        if not isinstance(extended, dict):
+            return []
+            
+        mods = extended.get("mods", {})
+        if not isinstance(mods, dict):
+            return []
+            
         target_groups = ["explicit", "implicit", "fractured", "desecrated"]
         
         for group in target_groups:
