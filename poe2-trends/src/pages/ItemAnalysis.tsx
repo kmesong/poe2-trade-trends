@@ -7,26 +7,21 @@ import toast from 'react-hot-toast';
 
 interface AnalysisResult {
   buckets: Bucket[];
-  influence: InfluenceMetric[];
+  tableData: any[]; // Rows = Attributes, Cols = Buckets
 }
 
 interface Bucket {
   range: string;
   count: number;
   avgPrice: number;
-}
-
-interface InfluenceMetric {
-  attribute: string;
-  diff: number; // Top 30% freq - Bottom 30% freq
-  topFreq: number;
-  bottomFreq: number;
+  attributes: Record<string, number>;
 }
 
 export const ItemAnalysis: React.FC = () => {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [analyzing, setAnalyzing] = useState(false);
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [expandedRow, setExpandedRow] = useState<string | null>(null);
   const [jobId, setJobId] = useState<string | null>(null);
 
   const processResults = useCallback((apiBuckets: ApiBucket[]) => {
@@ -35,49 +30,33 @@ export const ItemAnalysis: React.FC = () => {
     const buckets: Bucket[] = sortedBuckets.map(b => ({
       range: b.price_range,
       count: b.count,
-      avgPrice: b.avg_price
+      avgPrice: b.avg_price,
+      attributes: b.attributes
     }));
 
-    // Influence Calculation
-    // Top 2 (expensive) vs Bottom 2 (cheap) for sharper contrast
-    const topBuckets = sortedBuckets.slice(-2);
-    const bottomBuckets = sortedBuckets.slice(0, 2);
-
-    const getStats = (bucketList: ApiBucket[]) => {
-      const total = bucketList.reduce((sum, b) => sum + b.count, 0);
-      const attrs: Record<string, number> = {};
-      bucketList.forEach(b => {
-        Object.entries(b.attributes).forEach(([k, v]) => {
-          attrs[k] = (attrs[k] || 0) + v;
-        });
-      });
-      return { total, attrs };
-    };
-
-    const topStats = getStats(topBuckets);
-    const bottomStats = getStats(bottomBuckets);
-
-    const allKeys = new Set([...Object.keys(topStats.attrs), ...Object.keys(bottomStats.attrs)]);
-    const influence: InfluenceMetric[] = [];
-
-    allKeys.forEach(attr => {
-      const topFreq = topStats.total > 0 ? (topStats.attrs[attr] || 0) / topStats.total : 0;
-      const bottomFreq = bottomStats.total > 0 ? (bottomStats.attrs[attr] || 0) / bottomStats.total : 0;
-      const diff = topFreq - bottomFreq;
-
-    if (Math.abs(diff) > 0.05) {
-              influence.push({
-                attribute: attr,
-                diff: Math.round(diff * 100),
-                topFreq: Math.round(topFreq * 100),
-                bottomFreq: Math.round(bottomFreq * 100)
-              });
-            }
+    // Collect ALL unique attributes across all buckets
+    const allAttributes = new Set<string>();
+    buckets.forEach(b => {
+      Object.keys(b.attributes || {}).forEach(attr => allAttributes.add(attr));
     });
 
-    influence.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
+    // Build the table data: Rows = Attributes, Cols = Buckets
+    const tableData = Array.from(allAttributes).map(attr => {
+      const row: any = { attribute: attr };
+      buckets.forEach((b, idx) => {
+        row[idx] = b.attributes?.[attr] || 0;
+      });
+      return row;
+    });
 
-    setResult({ buckets, influence });
+    // Sort by total frequency (most common first)
+    tableData.sort((a, b) => {
+      const totalA = Object.values(a).slice(1).reduce((sum: number, val: any) => sum + (val as number), 0);
+      const totalB = Object.values(b).slice(1).reduce((sum: number, val: any) => sum + (val as number), 0);
+      return totalB - totalA;
+    });
+
+    setResult({ buckets, tableData });
     setAnalyzing(false);
   }, []);
 
@@ -253,24 +232,29 @@ export const ItemAnalysis: React.FC = () => {
                   <thead>
                     <tr className="border-b border-poe-border text-gray-400">
                       <th className="pb-2 font-medium">Attribute / Modifier</th>
-                      <th className="pb-2 font-medium text-right">Influence Score</th>
-                      <th className="pb-2 font-medium text-right">Top 30% Freq</th>
-                      <th className="pb-2 font-medium text-right">Bottom 30% Freq</th>
+                      {result.buckets.map((b, idx) => (
+                        <th key={idx} className="pb-2 font-medium text-right">{b.range}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-poe-border/30">
-                    {result.influence.map((item, idx) => (
+                    {result.tableData.slice(0, 50).map((row, idx) => (
                       <tr key={idx} className="hover:bg-white/5 transition-colors">
-                        <td className="py-3 text-poe-highlight">{item.attribute}</td>
-                        <td className={`py-3 text-right font-bold ${item.diff > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                          {item.diff > 0 ? '+' : ''}{item.diff}%
-                        </td>
-                        <td className="py-3 text-right text-gray-400">{item.topFreq}%</td>
-                        <td className="py-3 text-right text-gray-400">{item.bottomFreq}%</td>
+                        <td className="py-3 text-poe-highlight">{row.attribute}</td>
+                        {result.buckets.map((b, bIdx) => (
+                          <td key={bIdx} className="py-3 text-right text-gray-300">
+                            {row[bIdx] > 0 ? row[bIdx] : '-'}
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
                 </table>
+                {result.tableData.length > 50 && (
+                  <div className="text-center text-gray-500 text-xs mt-2">
+                    Showing top 50 of {result.tableData.length} attributes
+                  </div>
+                )}
               </div>
             )}
           </div>
