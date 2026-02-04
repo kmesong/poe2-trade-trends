@@ -134,10 +134,13 @@ def process_distribution_analysis(job_id, base_type, session_id):
                     if name:
                         attrs[name] = attrs.get(name, 0) + 1
                 
+                b_min = b['min']
+                b_max = b['max']
+                
                 bucket = Bucket(
-                    price_range=f"{b['min']} - {b['max']}",
-                    min_price=float(b['min']),
-                    max_price=float(b['max']),
+                    price_range=f"{b_min} - {b_max}" if b_max is not None else f"{b_min}+",
+                    min_price=float(b_min),
+                    max_price=float(b_max) if b_max is not None else None,
                     count=int(b['count']),
                     avg_price=float(b['avg_price']),
                     attributes=attrs
