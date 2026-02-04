@@ -213,13 +213,12 @@ export const ItemAnalysis: React.FC = () => {
             )}
           </div>
 
-          {/* Influence Table Section */}
           <div className="bg-poe-card border border-poe-border rounded-lg p-6 flex-1">
             <h3 className="text-poe-golddim font-bold mb-4 flex items-center gap-2">
-              <span>💎</span> Value Influencers
+              <span>📊</span> Attribute Distribution
             </h3>
             <p className="text-xs text-gray-500 mb-4">
-              Attributes that appear frequently in high-value items (Top 30%) but rarely in low-value items.
+              Count of how many times each attribute appears in each price bucket. Use this to identify which specs correlate with higher prices.
             </p>
 
             {!result ? (
