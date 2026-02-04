@@ -110,7 +110,7 @@ class Bucket(EmbeddedDocument):
     """
     price_range = StringField()
     min_price = FloatField()
-    max_price = FloatField()
+    max_price = FloatField(null=True)  # Allow null for open-ended buckets (e.g., 1000+)
     count = IntField()
     avg_price = FloatField()
     attributes = DictField()  # {"Attribute Name": frequency_count}
