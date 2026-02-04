@@ -125,15 +125,15 @@ def process_distribution_analysis(job_id, base_type, session_id):
             # Create Bucket objects
             buckets = []
             for b in dist_result['buckets']:
-                # Convert common_stats to attributes frequency map
-                # Since _calculate_average_from_result deduplicates, counts will be 1
-                # but we still follow the expected schema
+                # common_stats is now a list of modifier objects from _extract_all_modifiers
+                # Structure: [{"name": "...", "display_text": "...", ...}, ...]
                 attrs = {}
                 for stat in b.get('common_stats', []):
-                    name = stat.get('name') or stat.get('display_text')
+                    # Use display_text as the attribute name (includes value like "+15% to Fire Damage")
+                    name = stat.get('display_text') or stat.get('name')
                     if name:
                         attrs[name] = attrs.get(name, 0) + 1
-                
+
                 b_min = b['min']
                 b_max = b['max']
                 
