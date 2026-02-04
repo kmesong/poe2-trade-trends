@@ -102,7 +102,7 @@ export const ItemAnalysis: React.FC = () => {
   }, [selectedItems, processResults]);
 
   useEffect(() => {
-    let intervalId: NodeJS.Timeout;
+    let intervalId: ReturnType<typeof setInterval>;
 
     if (jobId) {
       intervalId = setInterval(async () => {
@@ -216,7 +216,7 @@ export const ItemAnalysis: React.FC = () => {
                       cursor={{ fill: 'rgba(200, 170, 109, 0.1)' }}
                     />
                     <Bar dataKey="count" fill="#c8aa6d" radius={[4, 4, 0, 0]}>
-                      {result.buckets.map((entry, index) => (
+                      {result.buckets.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={index > result.buckets.length * 0.7 ? '#bd3333' : '#c8aa6d'} />
                       ))}
                     </Bar>

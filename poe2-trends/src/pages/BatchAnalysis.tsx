@@ -124,14 +124,16 @@ export const BatchAnalysis: React.FC = () => {
            setAllResults(prev => {
              const updated = [...prev];
              
-             for (const newResult of data.results) {
-               const index = updated.findIndex(r => r.base_type === newResult.base_type);
-               if (index >= 0) {
-                 updated[index] = newResult;
-               } else {
-                 updated.unshift(newResult);
-               }
-             }
+              for (const newResult of data.results) {
+                if ('gap_ex' in newResult) {
+                  const index = updated.findIndex(r => r.base_type === newResult.base_type);
+                  if (index >= 0) {
+                    updated[index] = newResult;
+                  } else {
+                    updated.unshift(newResult);
+                  }
+                }
+              }
              return updated;
            });
         }
