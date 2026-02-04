@@ -194,6 +194,8 @@ class PriceAnalyzer:
         Calculate average price and collect modifier data from a search result.
         Returns tuple of (average_price, modifiers_list).
         """
+        print(f"DEBUG: _calculate_average_from_result called with search_result type={type(search_result)}")
+        print(f"DEBUG: search_result content (truncated): {str(search_result)[:500]}")
         try:
             if isinstance(search_result, list):
                 all_ids = search_result[:100]
@@ -218,14 +220,19 @@ class PriceAnalyzer:
                     
                 batch_ids = all_ids[i:i+10]
                 fetch_results = api.fetch(batch_ids, query_id=query_id)
+                print(f"DEBUG: fetch_results type={type(fetch_results)}")
+                print(f"DEBUG: fetch_results content (truncated): {str(fetch_results)[:500]}")
                 
                 if isinstance(fetch_results, list):
                     items = fetch_results
                 else:
                     items = fetch_results.get("result", [])
                 
-                for item in items:
+                print(f"DEBUG: Processing {len(items)} items from fetch")
+                for idx, item in enumerate(items):
+                    print(f"DEBUG: Item[{idx}] type={type(item)}")
                     if not isinstance(item, dict):
+                        print(f"DEBUG: Skipping non-dict item at index {idx}: {str(item)[:200]}")
                         continue
                         
                     # Extract modifiers/attributes from this item
@@ -308,6 +315,13 @@ class PriceAnalyzer:
                         unique_mods[key] = mod
                         
             return avg_price, list(unique_mods.values())
+        except AttributeError as e:
+            import traceback
+            print(f"CRITICAL AttributeError in _calculate_average_from_result: {e}")
+            print(f"Traceback: {traceback.format_exc()}")
+            print(f"Problematic search_result type: {type(search_result)}")
+            print(f"Problematic search_result: {str(search_result)[:1000]}")
+            return 0.0, []
         except Exception as e:
             print(f"Error calculating average: {e}")
             return 0.0, []
