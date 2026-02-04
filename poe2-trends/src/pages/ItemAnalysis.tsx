@@ -39,9 +39,9 @@ export const ItemAnalysis: React.FC = () => {
     }));
 
     // Influence Calculation
-    // Top 3 (expensive) vs Bottom 3 (cheap)
-    const topBuckets = sortedBuckets.slice(-3);
-    const bottomBuckets = sortedBuckets.slice(0, 3);
+    // Top 2 (expensive) vs Bottom 2 (cheap) for sharper contrast
+    const topBuckets = sortedBuckets.slice(-2);
+    const bottomBuckets = sortedBuckets.slice(0, 2);
 
     const getStats = (bucketList: ApiBucket[]) => {
       const total = bucketList.reduce((sum, b) => sum + b.count, 0);
@@ -65,14 +65,14 @@ export const ItemAnalysis: React.FC = () => {
       const bottomFreq = bottomStats.total > 0 ? (bottomStats.attrs[attr] || 0) / bottomStats.total : 0;
       const diff = topFreq - bottomFreq;
 
-      if (Math.abs(diff) > 0.1) {
-        influence.push({
-          attribute: attr,
-          diff: Math.round(diff * 100),
-          topFreq: Math.round(topFreq * 100),
-          bottomFreq: Math.round(bottomFreq * 100)
-        });
-      }
+    if (Math.abs(diff) > 0.05) {
+              influence.push({
+                attribute: attr,
+                diff: Math.round(diff * 100),
+                topFreq: Math.round(topFreq * 100),
+                bottomFreq: Math.round(bottomFreq * 100)
+              });
+            }
     });
 
     influence.sort((a, b) => Math.abs(b.diff) - Math.abs(a.diff));
@@ -211,10 +211,18 @@ export const ItemAnalysis: React.FC = () => {
                       fontSize={12}
                       tick={{ fill: '#a38d6d' }}
                     />
-                    <Tooltip 
-                      contentStyle={{ backgroundColor: '#0a0a0a', borderColor: '#2a2a2a', color: '#e0e0e0' }}
-                      cursor={{ fill: 'rgba(200, 170, 109, 0.1)' }}
-                    />
+                <Tooltip
+                  contentStyle={{ backgroundColor: '#0a0a0a', borderColor: '#2a2a2a', color: '#e0e0e0' }}
+                  cursor={{ fill: 'rgba(200, 170, 109, 0.1)' }}
+                  formatter={(value: number, name: string, props: any) => {
+                    const bucket = props.payload;
+                    return [
+                      `Items reviewed: ${value}`,
+                      `Price range: ${bucket.range}`,
+                      `Avg price: ${bucket.avgPrice.toFixed(2)} ex`
+                    ];
+                  }}
+                />
                     <Bar dataKey="count" fill="#c8aa6d" radius={[4, 4, 0, 0]}>
                       {result.buckets.map((_, index) => (
                         <Cell key={`cell-${index}`} fill={index > result.buckets.length * 0.7 ? '#bd3333' : '#c8aa6d'} />
