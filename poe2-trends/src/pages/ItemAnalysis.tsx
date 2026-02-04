@@ -25,6 +25,8 @@ export const ItemAnalysis: React.FC = () => {
   const [jobId, setJobId] = useState<string | null>(null);
 
   const processResults = useCallback((apiBuckets: ApiBucket[]) => {
+    console.log('DEBUG processResults received:', JSON.stringify(apiBuckets, null, 2));
+
     const sortedBuckets = [...apiBuckets].sort((a, b) => a.min_price - b.min_price);
 
     const buckets: Bucket[] = sortedBuckets.map(b => ({
@@ -36,9 +38,19 @@ export const ItemAnalysis: React.FC = () => {
 
     // Collect ALL unique attributes across all buckets
     const allAttributes = new Set<string>();
+    let totalAttrs = 0;
     buckets.forEach(b => {
-      Object.keys(b.attributes || {}).forEach(attr => allAttributes.add(attr));
+      const keys = Object.keys(b.attributes || {});
+      totalAttrs += keys.length;
+      keys.forEach(attr => allAttributes.add(attr));
     });
+
+    console.log(`DEBUG: Found ${allAttributes.size} unique attributes across ${buckets.length} buckets`);
+
+    // If no attributes found, show helpful message
+    if (allAttributes.size === 0) {
+      console.warn('WARNING: No attributes found in bucket data. Check if _extract_all_modifiers is returning data.');
+    }
 
     // Build the table data: Rows = Attributes, Cols = Buckets
     const tableData = Array.from(allAttributes).map(attr => {
