@@ -412,7 +412,7 @@ class PriceAnalyzer:
 
     def analyze_distribution(self, base_type, session_id=None, num_buckets=10):
         """
-        Analyzes the price distribution of a base item type.
+        Analyzes the price distribution of a base item type using fixed progression tiers.
         """
         api = TradeAPI(session_id)
         
@@ -423,12 +423,12 @@ class PriceAnalyzer:
             "term": base_type
         }
         
-        # 1. Find Min Price (sort price asc, fetch top 5)
+        # 1. Find Min Price (sort price asc, fetch top 1)
         min_query = copy.deepcopy(base_query)
         min_result = self._get_search_result(api, min_query)
         min_price, _ = self._calculate_average_from_result(api, min_result, target_count=1)
         
-        # 2. Find Max Price (sort price desc, fetch top 5)
+        # 2. Find Max Price (sort price desc, fetch top 1)
         max_query = copy.deepcopy(base_query)
         max_query["sort"] = {"price": "desc"}
         max_result = self._get_search_result(api, max_query)
@@ -438,24 +438,20 @@ class PriceAnalyzer:
         if max_price < min_price:
             max_price = min_price
         
-        # 3. Create Buckets
+        # 3. Create Buckets based on fixed thresholds
+        # Logarithmic progression: [1, 10, 100, 500, 1000]
+        thresholds = [1, 10, 100, 500, 1000]
         buckets_data = []
-        if max_price > min_price:
-            interval = (max_price - min_price) / num_buckets
-        else:
-            interval = 0.1 # Default small spread if no variation found
+        
+        for i in range(len(thresholds)):
+            b_min = thresholds[i]
             
-        for i in range(num_buckets):
-            b_min = min_price + (i * interval)
-            b_max = min_price + ((i + 1) * interval)
-            
-            # Avoid tiny overlaps or floating point issues
-            if i == num_buckets - 1 and max_price > 0:
-                b_max = max(b_max, max_price * 1.01)
-                
-            # Final safety check for price range validity
-            if b_max <= b_min:
-                b_max = b_min + 0.01
+            # Define b_max for the bucket
+            if i < len(thresholds) - 1:
+                b_max = thresholds[i+1]
+            else:
+                # Last bucket is 1000+
+                b_max = None
                 
             bucket_query = copy.deepcopy(base_query)
             if "filters" not in bucket_query: bucket_query["filters"] = {}
@@ -464,11 +460,14 @@ class PriceAnalyzer:
             if "filters" not in bucket_query["filters"]["trade_filters"]:
                 bucket_query["filters"]["trade_filters"]["filters"] = {}
                 
-            bucket_query["filters"]["trade_filters"]["filters"]["price"] = {
+            price_filter = {
                 "min": b_min,
-                "max": b_max,
                 "option": "exalted"
             }
+            if b_max is not None:
+                price_filter["max"] = b_max
+                
+            bucket_query["filters"]["trade_filters"]["filters"]["price"] = price_filter
             
             # Execute search for bucket
             result = self._get_search_result(api, bucket_query)
@@ -488,7 +487,7 @@ class PriceAnalyzer:
             
             buckets_data.append({
                 "min": round(b_min, 2),
-                "max": round(b_max, 2),
+                "max": round(b_max, 2) if b_max is not None else "1000+",
                 "count": total,
                 "avg_price": round(avg_val, 2),
                 "common_stats": common_stats
