@@ -335,6 +335,112 @@ class PriceAnalyzer:
             print(f"Error calculating average: {e}")
             return 0.0, []
 
+    def _calculate_average_with_count(self, api, search_result, item_validator=None, target_count=5, max_items_to_check=100, exclusions=None, min_mod_count=0, extractor_func=None):
+        """
+        Calculate average price and collect modifier data from a search result.
+        Returns tuple of (average_price, modifiers_list, reviewed_count).
+        """
+        reviewed_count = 0
+        try:
+            if isinstance(search_result, list):
+                all_ids = search_result[:100]
+            else:
+                all_ids = search_result.get("result", [])[:100]
+
+            if not all_ids:
+                return 0.0, [], 0
+
+            query_id = search_result.get("id") if isinstance(search_result, dict) else None
+            prices = []
+            modifiers = []
+            i = 0
+
+            extract_func = extractor_func or self._extract_modifiers
+
+            for i in range(0, min(len(all_ids), max_items_to_check), 10):
+                if len(prices) >= target_count:
+                    break
+
+                batch_ids = all_ids[i:i+10]
+                fetch_results = api.fetch(batch_ids, query_id=query_id)
+
+                if isinstance(fetch_results, list):
+                    items = fetch_results
+                else:
+                    items = fetch_results.get("result", [])
+
+                for item in items:
+                    if not isinstance(item, dict):
+                        continue
+
+                    item_mods = extract_func(item)
+                    if item_mods:
+                        if exclusions:
+                            filtered_mods = []
+                            for mod in item_mods:
+                                is_excluded = False
+                                for ex in exclusions:
+                                    if ex.mod_type and ex.mod_type != mod['mod_type']: continue
+                                    if ex.mod_tier and ex.mod_tier != mod['tier']: continue
+                                    if ex.mod_name_pattern:
+                                        import re
+                                        pattern = ex.mod_name_pattern.replace('%', '.*')
+                                        if not re.search(pattern, mod['name'], re.IGNORECASE): continue
+                                    is_excluded = True
+                                    break
+                                if not is_excluded:
+                                    filtered_mods.append(mod)
+                            item_mods = filtered_mods
+
+                        if not item_mods:
+                            continue
+                        if len(item_mods) < min_mod_count:
+                            continue
+
+                        modifiers.extend(item_mods)
+
+                    if item_validator and not item_validator(item):
+                        continue
+
+                    listing = item.get("listing", {})
+                    price_info = listing.get("price", {})
+                    amount = price_info.get("amount")
+                    currency = price_info.get("currency")
+
+                    if amount is not None and currency:
+                        exalts_val = self.currency_service.normalize_to_exalted(amount, currency)
+                        if exalts_val > 0:
+                            prices.append(exalts_val)
+                            reviewed_count += 1  # Count this item as reviewed
+                            if len(prices) >= target_count:
+                                break
+
+                if i + 10 < min(len(all_ids), max_items_to_check) and len(prices) < target_count:
+                    time.sleep(0.5)
+
+            if len(prices) < target_count:
+                return 0.0, [], reviewed_count
+
+            avg_price = sum(prices) / len(prices)
+
+            # Deduplicate modifiers
+            unique_mods = {}
+            for mod in modifiers:
+                key = (mod['name'], mod['tier'], mod['mod_type'])
+                if key not in unique_mods:
+                    unique_mods[key] = mod
+                else:
+                    current = unique_mods[key]
+                    curr_text = current.get('display_text', '')
+                    new_text = mod.get('display_text', '')
+                    if len(new_text) > len(curr_text):
+                        unique_mods[key] = mod
+
+            return avg_price, list(unique_mods.values()), reviewed_count
+        except Exception as e:
+            print(f"Error calculating average with count: {e}")
+            return 0.0, [], reviewed_count
+
     def _extract_attributes(self, item):
         """
         Helper to capture non-mod data (ilvl, sockets, etc.) plus explicit modifiers.
@@ -471,24 +577,25 @@ class PriceAnalyzer:
             
             # Execute search for bucket
             result = self._get_search_result(api, bucket_query)
-            total = result.get("total", 0)
-            
+            search_total = result.get("total", 0)
+
             avg_val = 0.0
             common_stats = []
-            
-            if total > 0:
+            reviewed_count = 0
+
+            if search_total > 0:
                 # Fetch a sample to get attributes and average price in this bucket
                 # Use _extract_attributes to get stats
-                avg_val, common_stats = self._calculate_average_from_result(
-                    api, result, 
-                    target_count=1, # Sample at least 1 item
+                avg_val, common_stats, reviewed_count = self._calculate_average_with_count(
+                    api, result,
+                    target_count=1,  # Sample at least 1 item
                     extractor_func=self._extract_attributes
                 )
-            
+
             buckets_data.append({
                 "min": round(b_min, 2),
                 "max": round(b_max, 2) if b_max is not None else None,
-                "count": total,
+                "count": reviewed_count,  # Only count what was actually reviewed
                 "avg_price": round(avg_val, 2),
                 "common_stats": common_stats
             })
