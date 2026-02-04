@@ -443,8 +443,9 @@ class PriceAnalyzer:
 
     def _extract_all_modifiers(self, item):
         """
-        Extract ALL modifiers from an item (for distribution analysis).
+        Extract ALL modifiers AND basic item attributes from an item (for distribution analysis).
         Returns list of modifier objects with display text.
+        Includes: rarity, ilvl, quality, sockets, links, corrupted, identified, mirrored.
         """
         modifiers = []
         item_data = item.get("item", {})
@@ -458,12 +459,74 @@ class PriceAnalyzer:
 
         extended = item_data.get("extended", {})
         if not isinstance(extended, dict):
-            return []
+            extended = {}
 
         mods = extended.get("mods", {})
         if not isinstance(mods, dict):
-            return []
+            mods = {}
 
+        # Helper to add attribute
+        def add_prop(name, value, mod_type="property"):
+            modifiers.append({
+                "name": name,
+                "tier": "",
+                "mod_type": mod_type,
+                "rarity": rarity,
+                "item_name": item_name,
+                "display_text": str(value)
+            })
+
+        # Basic Item Attributes (ALWAYS include these)
+        # Rarity
+        add_prop("Rarity", rarity)
+
+        # Item Level
+        if "ilvl" in item_data:
+            add_prop("Item Level", item_data["ilvl"])
+
+        # Quality
+        properties = item_data.get("properties", [])
+        for prop in properties:
+            if prop.get("name") == "Quality":
+                values = prop.get("values", [])
+                if values and len(values) > 0:
+                    add_prop("Quality", values[0][0])
+
+        # Sockets & Links
+        sockets = item_data.get("sockets", [])
+        if sockets:
+            add_prop("Sockets", len(sockets))
+
+            # Calculate max links
+            groups = {}
+            for s in sockets:
+                g = s.get("group", 0)
+                groups[g] = groups.get(g, 0) + 1
+            max_links = max(groups.values()) if groups else 0
+            add_prop("Links", max_links)
+
+        # Flags
+        if item_data.get("corrupted"):
+            add_prop("Corrupted", "Yes")
+            # Check for twice corrupted (has more than one implicit)
+            # Implicit mods count can tell us if it's twice corrupted
+            implicit_mods = mods.get("implicit", [])
+            if isinstance(implicit_mods, list) and len(implicit_mods) > 1:
+                add_prop("Twice Corrupted", "Yes")
+
+        if item_data.get("identified"):
+            add_prop("Identified", "Yes")
+
+        if item_data.get("mirrored"):
+            add_prop("Mirrored", "Yes")
+
+        # Prefixes/Suffixes count
+        if "prefixes" in extended:
+            add_prop("Prefix Count", extended["prefixes"], "stat")
+        if "suffixes" in extended:
+            add_prop("Suffix Count", extended["suffixes"], "stat")
+
+        # Extract ALL modifiers (not just T1)
         target_groups = ["explicit", "implicit", "fractured", "desecrated"]
 
         for group in target_groups:
