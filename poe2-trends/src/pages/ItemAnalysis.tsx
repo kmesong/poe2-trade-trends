@@ -130,6 +130,24 @@ export const ItemAnalysis: React.FC = () => {
     }
   };
 
+  // Auto-load existing analysis when item is selected
+  const handleSelectionChange = useCallback((items: string[]) => {
+    setSelectedItems(items);
+    if (items.length > 0) {
+      const itemToCheck = items[0];
+      getDistributionResults(itemToCheck).then(results => {
+        if (results && results.length > 0) {
+          // Sort by date desc and take the first (most recent)
+          const latest = results.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
+          processResults(latest.buckets);
+          toast.success(`Loaded existing analysis for ${itemToCheck}`);
+        }
+      }).catch(err => {
+        console.error('Error checking for existing analysis:', err);
+      });
+    }
+  }, [processResults]);
+
   return (
     <div className="p-6 h-screen flex flex-col overflow-hidden">
       <h1 className="text-2xl font-bold text-poe-gold mb-6 font-serif">Deep Item Analysis</h1>
@@ -139,7 +157,7 @@ export const ItemAnalysis: React.FC = () => {
         <div className="w-1/3 flex flex-col bg-poe-card border border-poe-border rounded-lg p-4">
           <h2 className="text-lg font-semibold text-poe-highlight mb-4">Select Items to Analyze</h2>
           <div className="flex-1 overflow-hidden">
-             <ItemTree onSelectionChange={setSelectedItems} />
+             <ItemTree onSelectionChange={handleSelectionChange} />
           </div>
           <div className="mt-4 pt-4 border-t border-poe-border">
             <button
